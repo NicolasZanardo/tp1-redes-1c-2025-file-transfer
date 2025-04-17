@@ -1,5 +1,5 @@
 import argparse
-#from lib.server import Server
+from librerias.server import Server
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Upload files to a server.")
