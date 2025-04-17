@@ -12,3 +12,12 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--storage', type=str, default="", help="Storage dir path")
     parser.add_argument('-a', '--algorithm', type=str, default="sw", help="sw or sr")
     parser.add_argument('-r', '--protocol', help="error recovery protocol")
+
+    # Parsear los argumentos
+    args = parser.parse_args()
+
+    # Ajustar verbosidad
+    verbose = args.verbose and not args.quiet
+
+    server = Server(args.host, args.port, args.algorithm)
+    server.start()
