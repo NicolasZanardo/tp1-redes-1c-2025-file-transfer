@@ -1,4 +1,4 @@
-#from lib.client import Client
+from lib.client import Client
 import argparse
 
 if __name__ == '__main__':
