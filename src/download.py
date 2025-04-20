@@ -4,7 +4,7 @@ import argparse
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download files from server.")
 
-    # Argumentos opcionales
+    # Optional Arguments
     parser.add_argument('-h', '--help', help='show this help message and exit')
     parser.add_argument('-v', '--verbose', action='store_true', help="Increase output verbosity")
     parser.add_argument('-q', '--quiet', action='store_true', help="Decrease output verbosity")
@@ -15,10 +15,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--algorithm', type=str, default="sw", help="sw or sr")
     parser.add_argument('-r', '--protocol', help="error recovery protocol")
 
-    # Parsear los argumentos
+    # Parse the arguments
     args = parser.parse_args()
 
-    # Ajustar verbosidad
+    # Adjust verbosity
     verbose = args.verbose and not args.quiet
 
     client = Client(args.host, args.port, args.algorithm)

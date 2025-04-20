@@ -11,5 +11,5 @@ class Server:
         self.algorithm = algorithm
 
     def start(self):
-        print("se bindea la conexion y se reciben los bytes(serializar/deserealizar)")
+        print("the connection is bound and the bytes are received (serialize/deserialize)")
     
