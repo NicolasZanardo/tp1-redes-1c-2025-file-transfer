@@ -23,11 +23,11 @@ class ServerListener:
         self.socket.settimeout(2)
         self.connections = {}
         self.running = False
-        Logger.debuglog(self.door_address, f"Server setup on {self.door_address}")
+        Logger.debug(who=self.door_address, message=f"Server setup on {self.door_address}")
 
     def start(self):
         self.running = True
-        Logger.debuglog(self.door_address, f"Server started on {self.door_address}")
+        Logger.debug(who=self.door_address, message=f"Server started on {self.door_address}")
             
     def get_client(self):
         # If the server is not running, raise an exception
@@ -39,20 +39,20 @@ class ServerListener:
         try:
             data, addr = self.socket.recvfrom(1024)
         except socket.timeout:
-            Logger.debuglog(self.door_address, "Timeout waiting for new connection")
+            Logger.debug(who=self.door_address, message="Timeout waiting for new connection")
             return get_client()  # Timeout if no data received
         except Exception as e:
-            Logger.debuglog(self.door_address, f"Error receiving data: {e}")
+            Logger.debug(who=self.door_address, message=f"Error receiving data: {e}")
             return None
 
         try:
             valid_connection = Handshake.server(self.door_address, addr, data)
             self.connections[addr] = valid_connection
 
-            Logger.debuglog(self.door_address, f"New connection established with {addr} using {valid_connection.source_address}")
+            Logger.debug(who=self.door_address, message=f"New connection established with {addr} using {valid_connection.source_address}")
             return valid_connection
         except Exception as e:
-            Logger.debuglog(self.door_address, f"Handshake failed: {e}")
+            Logger.debug(who=self.door_address, message=f"Handshake failed: {e}")
         return None
     
     
@@ -60,7 +60,7 @@ class ServerListener:
     def stop(self):
         self.running = False
         self.socket.close()
-        Logger.debuglog(self.door_address, f"Server stopped on {self.door_address}")
+        Logger.debug(who=self.door_address, message=f"Server stopped on {self.door_address}")
         
         for conn in self.connections.values():
             conn.close()

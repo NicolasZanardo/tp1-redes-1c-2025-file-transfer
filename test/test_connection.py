@@ -2,6 +2,12 @@ import unittest
 import threading
 import time
 from src.protocol.server_listener import ServerManager
+from src.utils.logger import Logger, VerbosityLevel
+
+# Set up the logger for the test
+Logger.setup_name("test/test_connection.py")
+Logger.setup_verbosity(VerbosityLevel.VERBOSE)
+
 
 server_port = 2222
 client_port = 3333
