@@ -52,3 +52,15 @@ class Logger:
 
     def info(self, message):
         self.logger.info(self.log(message, Colors.BLUE))
+
+    @classmethod
+    def mustlog(cls, who, message: str):
+        print(f"FROM {who}: {message}")
+    
+    @classmethod
+    def verboselog(cls, who, message: str):
+        print(f"FROM {who}: {message}")
+    
+    @classmethod
+    def debuglog(cls, who, message: str):
+        print(f"FROM {who}: {message}")
