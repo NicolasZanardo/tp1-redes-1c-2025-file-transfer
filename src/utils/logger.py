@@ -18,7 +18,8 @@ class Colors(Enum):
     YELLOW = "\x1b[33m"
     RED = "\x1b[31m"
     PURPLE = "\x1b[35m"
-    BLUE = "\x1b[34m"
+    BLUE = "\x1b[34m" # lighter blue
+    LIGHT_BLUE = "\x1b[94m"
     CYAN = "\x1b[36m"
     GRAY = "\033[0;37m"
     RESET = "\x1b[0m"
@@ -57,12 +58,11 @@ class Logger:
     def info(cls, message: str, who=None):
         if who:
             message = f"FROM {who}: {message}"
-        cls.logger.info(format_message(message, Colors.BLUE))
+        cls.logger.info(format_message(message, Colors.LIGHT_BLUE))
 
 
 def format_message(message: str, color: Colors):
     return f"{color.value} {message} {Colors.RESET.value}"
 
-
 Logger.setup_name('')
-Logger.setup_verbosity(VerbosityLevel.NORMAL)
+Logger.setup_verbosity(VerbosityLevel.VERBOSE) # default verbosity level for tests

@@ -18,6 +18,13 @@ pip install -e .
 python -m unittest discover -s test
 ```
 
+4. **Ejecutar la aplicacion** utilizando las linas de comando que siguen en distintas terminales de comando:
+
+```bash
+python src/start-server.py -H 0.0.0.0 -p 11111 -s serverfiles/
+python src/upload.py -H 0.0.0.0 -p 11111
+```
+
 ## Como expandir el proyecto sin romper test o instalador
 
 1. **Agregar archivo** `__init__.py` vacio a cada carpeta.

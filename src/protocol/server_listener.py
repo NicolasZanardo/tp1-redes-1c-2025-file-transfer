@@ -1,7 +1,7 @@
 import socket
-from src.protocol.connection_socket import ConnectionSocket
-from src.protocol.handshake import Handshake
-from src.utils.logger import Logger
+from protocol.connection_socket import ConnectionSocket
+from protocol.handshake import Handshake
+from utils.logger import Logger
 
 
 class ServerManager:
@@ -12,8 +12,8 @@ class ServerManager:
         return server
 
     @staticmethod
-    def connect_to_server(own_addr=('localhost', 8080), server_addr=('localhost', 8080)):
-        return Handshake.client(own_addr, server_addr)
+    def connect_to_server(server_addr=('localhost', 8080)):
+        return Handshake.client(server_addr)
 
 class ServerListener:
     def __init__(self, host='localhost', port=8080):
@@ -40,7 +40,7 @@ class ServerListener:
             data, addr = self.socket.recvfrom(1024)
         except socket.timeout:
             Logger.debug(who=self.door_address, message="Timeout waiting for new connection")
-            return get_client()  # Timeout if no data received
+            return self.get_client()  # Timeout if no data received
         except Exception as e:
             Logger.debug(who=self.door_address, message=f"Error receiving data: {e}")
             return None

@@ -1,13 +1,15 @@
 import socket
-from src.protocol.connection_socket import ConnectionSocket
-from src.utils.logger import Logger
+from protocol.connection_socket import ConnectionSocket
+from utils.logger import Logger
 
 class Handshake:
     @staticmethod
-    def client(own_addr=('localhost', 8080), server_addr=('localhost', 8080)):
-        Logger.debug(who=own_addr, message=f"Connecting to server {server_addr}")
+    def client(server_addr=('localhost', 8080)):
         skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        skt.bind(own_addr)
+        skt.bind(('', 0))
+        own_addr = skt.getsockname()
+        Logger.debug(who=own_addr, message=f"Connecting to server {server_addr}")
+        
 
         # Send handshake to the server
         Logger.debug(who=own_addr, message=f"Sending LOGIN to {server_addr}")
@@ -22,7 +24,7 @@ class Handshake:
             raise Exception("Failed to receive ACK from server.")
         skt.close()
 
-        valid_connection = ConnectionSocket(own_addr, new_serv_addr)
+        valid_connection = ConnectionSocket(new_serv_addr, own_addr)
         valid_connection.send(b'all ok')
 
 
@@ -51,10 +53,4 @@ class Handshake:
         return valid_connection
      
 def get_free_connection(host, addr):
-    for port in range(1030, 65535):
-        try:
-            return ConnectionSocket((host, port), addr)
-        except OSError:
-            continue
-
-    return None
+    return ConnectionSocket(addr)

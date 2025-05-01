@@ -1,5 +1,6 @@
 from librerias.client import Client
 import argparse
+import time
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download files from server.")
@@ -19,8 +20,34 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Adjust verbosity
-    verbose = args.verbose and not args.quiet
+    Logger.setup_name('download.py')
+    
+    if args.verbose:
+        Logger.setup_verbosity(VerbosityLevel.VERBOSE)
+    elif args.quiet:
+        Logger.setup_verbosity(VerbosityLevel.QUIET)
+    else:
+        Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    client = Client(args.host, args.port, args.algorithm)
-    client.download(args.name, args.algorithm)
-    client.close()
+
+    server = ServerManager.connect_to_server(
+        host=args.host, port=args.port
+    )
+    
+    while True:
+        try:
+            time.sleep(10)  # Sleep for a short time to avoid busy waiting
+        except KeyboardInterrupt:
+            server.close()
+            break
+        except Exception as e:
+            Logger.error(f"Error on client: {e}")
+            server.close()
+            break
+    
+    Logger.info("Client stopped.")
+
+    #client = Client(args.host, args.port, args.algorithm)
+    #client.download(args.name, args.algorithm)
+    #client.close()
+    

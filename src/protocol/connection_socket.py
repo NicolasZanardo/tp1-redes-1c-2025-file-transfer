@@ -1,12 +1,16 @@
 import socket
-from src.utils.logger import Logger
+from utils.logger import Logger
 
 class ConnectionSocket:
-    def __init__(self, source_address, destination_address):
-        self.source_address = source_address
+    def __init__(self, destination_address, source_address=None):
+        if source_address is None:
+            source_address = ('localhost', 0)
+
         self.destination_address = destination_address
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(source_address)
+        
+        self.socket.bind(source_address)  # Bind to any available port
+        self.source_address = self.socket.getsockname()
         Logger.debug(who=self.source_address, message=f"Socket created from {self.source_address} to {self.destination_address}")
 
     def send(self, data: bytes):
