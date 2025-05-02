@@ -15,7 +15,10 @@ pip install -e .
 3. **Ejecutar los tests** utilizando:
 
 ```bash
-python -m unittest discover -s test
+python -m test.run [-vv] [-vq]
+# Sin argumento para NORMAL logger
+# -vv para VERBOSE logger
+# -vq para QUIET logger
 ```
 
 4. **Ejecutar la aplicacion** utilizando las linas de comando que siguen en distintas terminales de comando:
@@ -39,5 +42,4 @@ import unittest
 class TestSimple(unittest.TestCase):
     def test_true(self):
         self.assertTrue(True)
-
 ```

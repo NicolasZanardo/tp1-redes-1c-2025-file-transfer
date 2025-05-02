@@ -6,8 +6,8 @@ from test.utils_test import UtilsFunction
 
 
 # Set up the logger for the test
-Logger.setup_name("test/test_connection.py")
-Logger.setup_verbosity(VerbosityLevel.VERBOSE)
+#Logger.setup_name("test/test_connection.py")
+#Logger.setup_verbosity(VerbosityLevel.VERBOSE)
 
 server_addr = "0.0.0.0"
 server_port = 2222
@@ -16,6 +16,7 @@ utils = UtilsFunction()
 
 class TestClientConnection(unittest.TestCase):
     def test_connection(self):
+        print('')
         utils.setup_test_threads(
             self._test_connection_server, 
             self._test_connection_client, 
