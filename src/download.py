@@ -1,11 +1,12 @@
-from librerias.client import Client
 import argparse
 import time
+from protocol.stop_and_wait import StopAndWaitReceiver
+from protocol.server_listener import ServerManager
+from src.protocol.go_back_n import GoBackNReceiver
+from utils.logger import Logger, VerbosityLevel
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download files from server.")
-
-    # Optional Arguments
     parser.add_argument('-h', '--help', help='show this help message and exit')
     parser.add_argument('-v', '--verbose', action='store_true', help="Increase output verbosity")
     parser.add_argument('-q', '--quiet', action='store_true', help="Decrease output verbosity")
@@ -13,15 +14,11 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port', type=int, default=8080, help="Server port")
     parser.add_argument('-s', '--src', type=str, default="", help="Source file path")
     parser.add_argument('-n', '--name', type=str, default="", help="File name")
-    parser.add_argument('-a', '--algorithm', type=str, default="sw", help="sw or sr")
-    parser.add_argument('-r', '--protocol', help="error recovery protocol")
+    parser.add_argument('-a', '--algorithm', type=str, default="sw", choices=["sw", "gbn"], help="sw or gbn")
 
-    # Parse the arguments
     args = parser.parse_args()
 
-    # Adjust verbosity
     Logger.setup_name('download.py')
-    
     if args.verbose:
         Logger.setup_verbosity(VerbosityLevel.VERBOSE)
     elif args.quiet:
@@ -29,25 +26,15 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
+    sock = ServerManager.connect_to_server((args.host, args.port))
 
-    server = ServerManager.connect_to_server(
-        host=args.host, port=args.port
-    )
-    
-    while True:
-        try:
-            time.sleep(10)  # Sleep for a short time to avoid busy waiting
-        except KeyboardInterrupt:
-            server.close()
-            break
-        except Exception as e:
-            Logger.error(f"Error on client: {e}")
-            server.close()
-            break
-    
-    Logger.info("Client stopped.")
+    if args.algorithm == "sw":
+        protocol = StopAndWaitReceiver(sock, args.name)
+    elif args.algorithm == "gbn":
+        protocol = GoBackNReceiver(sock, args.name)
 
-    #client = Client(args.host, args.port, args.algorithm)
-    #client.download(args.name, args.algorithm)
-    #client.close()
-    
+    try:
+        protocol.start()
+    finally:
+        protocol.close()
+        Logger.info("Download completed and connection closed.")
