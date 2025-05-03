@@ -67,10 +67,11 @@ Modificar **MTUs** de switches
 mininet> sh ifconfig
 mininet> sh ifconfig s3-eth2 mtu 1000
 ```
-Generar trafico con **iperf** 
+Generar trafico con **iperf** (con tamaño > MTU para generar **fragmentacion**)
 ```bash
 mininet> h2 iperf -s -u &
-mininet> h1 iperf -c 10.0.0.2 -u -b 10M -l 2000 -t 30
+//Si el MTU es menor que 2000, el tráfico se fragmentará.
+mininet> h1 iperf -c 10.0.0.2 -u -b 10M -l 2000 -t 30 
 ```
 
 
