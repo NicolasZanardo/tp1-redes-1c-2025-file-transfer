@@ -65,7 +65,7 @@ mininet> h1 ping -c 10 h2
 Modificar **MTUs** de switches
 ```bash
 mininet> sh ifconfig
-mininet> sh ifconfig s3-eth2 mtu 1000
+mininet> sh ifconfig s2-eth2 mtu 1000
 ```
 Generar trafico con **iperf** (con tamaño > MTU para generar **fragmentacion**)
 ```bash
