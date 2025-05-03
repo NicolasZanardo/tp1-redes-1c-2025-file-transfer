@@ -65,4 +65,3 @@ def format_message(message: str, color: Colors):
     return f"{color.value} {message} {Colors.RESET.value}"
 
 Logger.setup_name('')
-#Logger.setup_verbosity(VerbosityLevel.VERBOSE) # default verbosity level for tests
