@@ -43,3 +43,35 @@ class TestSimple(unittest.TestCase):
     def test_true(self):
         self.assertTrue(True)
 ```
+## Red virtual con mininet
+Ejecutar la **topologia**
+```bash
+sudo mn --custom mytopo.py --topo mytopo
+```
+Iniciar cliente en h1 y server en h2
+```bash
+mininet> h1 python3 src/start-server.py -H 0.0.0.0 -p 11111 -s serverfiles/ &
+mininet> h2 python3 src/upload.py -H 10.0.0.2 -p 11111 &
+```
+Verificar inicialización
+```bash
+mininet> dump
+```
+Configurar **packet loss** (10%) y verificar con ping 
+```bash
+mininet> sh tc qdisc add dev s3-eth2 root netem loss 10%
+mininet> h1 ping -c 10 h2
+```
+Modificar **MTUs** de switches
+```bash
+mininet> sh ifconfig
+mininet> sh ifconfig s3-eth2 mtu 1000
+```
+Generar trafico con **iperf** 
+```bash
+mininet> h2 iperf -s -u &
+mininet> h1 iperf -c 10.0.0.2 -u -b 10M -l 2000 -t 30
+```
+
+
+
