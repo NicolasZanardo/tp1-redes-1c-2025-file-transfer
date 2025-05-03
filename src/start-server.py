@@ -1,27 +1,21 @@
-import argparse
-from librerias.server import Server
+import argparse, os
 from protocol.server_listener import ServerManager
+from protocol.stop_and_wait import StopAndWaitReceiver
+from protocol.selective_repeat import SelectiveRepeatReceiver
 from utils.logger import Logger, VerbosityLevel
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description="Upload files to a server.")
-
-    # Optional Arguments
-    #parser.add_argument('-h', '--help', help='show this help message and exit')
-    parser.add_argument('-v', '--verbose', action='store_true', help="Increase output verbosity")
-    parser.add_argument('-q', '--quiet', action='store_true', help="Decrease output verbosity")
-    parser.add_argument('-H', '--host', type=str, default="127.0.0.1", help="Server IP address", required=True)
-    parser.add_argument('-p', '--port', type=int, default=8080, help="Server port", required=True)
-    parser.add_argument('-s', '--storage', type=str, default="", help="Storage dir path", required=True)
-    parser.add_argument('-a', '--algorithm', type=str, default="sw", help="sw or sr")
-    parser.add_argument('-r', '--protocol', help="error recovery protocol")
-
-    # Parse the arguments
+    parser.add_argument('-v','--verbose',action='store_true')
+    parser.add_argument('-q','--quiet',  action='store_true')
+    parser.add_argument('-H','--host',   type=str, required=True)
+    parser.add_argument('-p','--port',   type=int, required=True)
+    parser.add_argument('-s','--storage',type=str, required=True)
+    parser.add_argument('-n','--name',   type=str, required=True)
+    parser.add_argument('-a','--algorithm',choices=["sw","sr"],default="sw")
     args = parser.parse_args()
 
-    # Adjust verbosity
     Logger.setup_name('start-server.py')
-
     if args.verbose:
         Logger.setup_verbosity(VerbosityLevel.VERBOSE)
     elif args.quiet:
@@ -29,19 +23,47 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
+    if not os.path.isdir(args.storage):
+        raise SystemExit(f"{args.storage} no es un directorio válido")
+
     server = ServerManager.start_server(host=args.host, port=args.port)
-    
-    while True:
-        try:
-            server.get_client()
-        except KeyboardInterrupt:
-            server.stop()
-            break
-        except Exception as e:
-            Logger.error(f"Error accepting client: {e}")
-            server.stop()
-            break
+    Logger.info(f"Server listening on {args.host}:{args.port}")
 
-    Logger.info("Server stopped.")
+    try:
+        while True:
+            try:
+                conn = server.get_client()
+                if conn is None:
+                    continue
 
-    
+                raw_sock = conn.socket
+                output_path = os.path.join(args.storage, args.name)
+
+                if args.algorithm == "sw":
+                    protocol = StopAndWaitReceiver(raw_sock, output_path)
+                else:
+                    protocol = SelectiveRepeatReceiver(raw_sock, output_path)
+
+                try:
+                    protocol.start()   
+                except Exception as e:
+                    Logger.error(f"Error durante la transferencia: {e}")
+                finally:
+                    try: protocol.close()
+                    except OSError:
+                        pass
+                    conn.close()
+                    Logger.info("Conexión con cliente finalizada.")
+
+            except KeyboardInterrupt:
+                Logger.info("Keyboard interrupt, shutting down server.")
+                break
+
+            except Exception as e:
+                Logger.error(f"Error aceptando cliente: {e}")
+    finally:
+        server.stop()
+        Logger.info("Server stopped.")
+
+if __name__ == "__main__":
+    main()
