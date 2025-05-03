@@ -1,6 +1,9 @@
 import argparse
-import time
-from src import *
+from protocol.selective_repeat import SelectiveRepeatProtocol
+from protocol.stop_and_wait import StopAndWaitProtocol
+from protocol.server_listener import ServerManager
+from utils.custom_help_formatter import CustomHelpFormatter
+from utils.logger import Logger, VerbosityLevel
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -16,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--src'      , metavar='DIRPATH'  , type=str, default="", help="Source file path")
     parser.add_argument('-n', '--name'     , metavar='FILENAME' , type=str, default="", help="File name")
     parser.add_argument('-r', '--protocol' , metavar='protocol' , help="error recovery protocol")
+    parser.add_argument('-a', '--algorithm', choices=["sw","sr"], default="sw")
 
     # Parse the arguments
     args = parser.parse_args()
@@ -29,18 +33,29 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    # Connect to the server
-    sock = ServerManager.connect_to_server((args.host, args.port))
+    connection = ServerManager.connect_to_server((args.host, args.port))
+    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}")
+    
+    udp_socket = connection.socket
 
     # Check if the protocol is specified
     if args.algorithm == "sw":
-        protocol = StopAndWaitProtocol(sock, (args.host, args.port), args.src)
-    elif args.algorithm == "gbn":
-        protocol = GoBackNProtocol(sock, (args.host, args.port), args.src)
-    
-    # Start the upload process
+        protocol = StopAndWaitProtocol(
+            sock=udp_socket,
+            dest=connection.destination_address,
+            file_path=args.src
+        )
+    else:
+        protocol = SelectiveRepeatProtocol(
+            sock=udp_socket,
+            dest=connection.destination_address,
+            file_path=args.src
+        )
+
     try:
         protocol.start()
     finally:
-        protocol.close()
+        protocol.close()      
+        connection.close()    
         Logger.info("Upload completed and connection closed.")
+

@@ -50,6 +50,12 @@ class ConnectionSocket:
         Logger.debug(who=self.source_address, message=f"Socket closed from {self.source_address} to {self.destination_address}")
         self.socket = None
 
-    def get_message(self):
-        data, addr = self.receive()
-        return data
+    def get_message(self, timeout=2, max_retries=5):
+        self.socket.settimeout(timeout)
+        for attempt in range(max_retries):
+            try:
+                data, addr = self.receive()
+                return data
+            except socket.timeout:
+                Logger.debug(who=self.source_address, message=f"[Attempt {attempt+1}] Timeout waiting for message, retrying...")
+        raise TimeoutError("Failed to receive message after retries.")
