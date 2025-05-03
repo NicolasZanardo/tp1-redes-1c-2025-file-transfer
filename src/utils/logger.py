@@ -34,7 +34,7 @@ class Logger:
     @classmethod
     def setup_verbosity(cls, level: VerbosityLevel):
         cls.verbosity = level
-
+        
         if level is VerbosityLevel.QUIET:
             cls.logger.setLevel(logging.CRITICAL)
         elif level is VerbosityLevel.VERBOSE:
@@ -65,4 +65,3 @@ def format_message(message: str, color: Colors):
     return f"{color.value} {message} {Colors.RESET.value}"
 
 Logger.setup_name('')
-Logger.setup_verbosity(VerbosityLevel.VERBOSE) # default verbosity level for tests

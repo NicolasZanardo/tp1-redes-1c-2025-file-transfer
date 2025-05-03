@@ -1,18 +1,25 @@
-import argparse, os
-from protocol.server_listener import ServerManager
-from protocol.stop_and_wait import StopAndWaitReceiver
+import os
+import sys
+import argparse
+from src import *
 from protocol.selective_repeat import SelectiveRepeatReceiver
-from utils.logger import Logger, VerbosityLevel
 
-def main():
-    parser = argparse.ArgumentParser(description="Upload files to a server.")
-    parser.add_argument('-v','--verbose',action='store_true')
-    parser.add_argument('-q','--quiet',  action='store_true')
-    parser.add_argument('-H','--host',   type=str, required=True)
-    parser.add_argument('-p','--port',   type=int, required=True)
-    parser.add_argument('-s','--storage',type=str, required=True)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog='start-server',
+        description='Start a program to host the file-server.',
+        formatter_class=CustomHelpFormatter  # preserves your manual spacing
+    )
+
+    parser.add_argument('-v', '--verbose' , action='store_true', help="increase output verbosity")
+    parser.add_argument('-q', '--quiet'   , action='store_true', help="decrease output verbosity")
+    parser.add_argument('-H', '--host'    , metavar='ADDR'     , type=str, default="127.0.0.1", help="service IP address")
+    parser.add_argument('-p', '--port'    , metavar='PORT'     , type=int, default=8080, help="service port")
+    parser.add_argument('-s', '--storage' , metavar='DIRPATH'  , type=str, default="", help="storage dir path")
+    parser.add_argument('-r', '--protocol', metavar='protocol' , help="error recovery protocol")
     parser.add_argument('-n','--name',   type=str, required=True)
     parser.add_argument('-a','--algorithm',choices=["sw","sr"],default="sw")
+    # Parse the arguments
     args = parser.parse_args()
 
     Logger.setup_name('start-server.py')
@@ -65,5 +72,3 @@ def main():
         server.stop()
         Logger.info("Server stopped.")
 
-if __name__ == "__main__":
-    main()
