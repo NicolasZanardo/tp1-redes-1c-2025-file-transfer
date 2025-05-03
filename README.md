@@ -60,7 +60,7 @@ mininet> dump
 Configurar **packet loss** (10%) y verificar con ping 
 ```bash
 mininet> sh tc qdisc add dev s3-eth2 root netem loss 10%
-mininet> h1 ping -c 100 h2
+mininet> h2 ping -c 100 h1
 ```
 Modificar **MTUs** de switches
 ```bash
