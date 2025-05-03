@@ -65,7 +65,7 @@ class CompletedState(SWState):
 
 class StopAndWaitProtocol:
     def __init__(self, sock: socket.socket, dest: tuple, file_path: str,
-                 packetizer: Packetizer = None, timeout: float = 1.0):
+                 packetizer: Packetizer = None, timeout: float = 10.0):
         self.sock = sock
         self.dest = dest
         self.file_path = file_path
@@ -121,6 +121,10 @@ class StopAndWaitReceiver:
             while self.running:
                 try:
                     packet, addr = self.sock.recvfrom(2048)
+                    Logger.debug(
+                        who=self.sock.getsockname(),
+                        message=f"[SW-Receiver] Raw packet received from {addr}: {packet!r}"
+)
                     if self.packetizer.is_data(packet):
                         seq = self.packetizer.extract_seq(packet)
                         Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] Received DATA seq={seq} from {addr}")
