@@ -40,7 +40,7 @@ class WaitingAckState(SWState):
                 ack_seq = self.ctx.packetizer.extract_seq(packet)
                 Logger.debug(who=self.ctx.sock.getsockname(), message=f"[SW] received ACK seq={ack_seq}")
                 if ack_seq == self.ctx.seq:
-                    self.ctx.seq ^= 1
+                    self.ctx.seq = self.ctx.seq + 1
                     self.ctx.transition('sending')
                 else:
                     Logger.debug(who=self.ctx.sock.getsockname(), message="[SW] unexpected ACK, resending")
@@ -62,10 +62,13 @@ class CompletedState(SWState):
         self.ctx.sock.sendto(terminator, self.ctx.dest)
         Logger.info(f"[SW] Transfer completed to {self.ctx.dest}")
         self.ctx.close()
+        self.ctx.completed = True
+        return 
 
 class StopAndWaitProtocol:
     def __init__(self, sock: socket.socket, dest: tuple, file_path: str,
                  packetizer: Packetizer = None, timeout: float = 10.0):
+        self.completed = False
         self.sock = sock
         self.dest = dest
         self.file_path = file_path
@@ -92,13 +95,14 @@ class StopAndWaitProtocol:
                 yield data
 
     def start(self):
-        Logger.info(f"[SW] Starting transfer to {self.dest}")
-        self.current_state.on_enter()
+        while not self.completed:
+            Logger.info(f"[SW] Starting transfer to {self.dest}")
+            self.current_state.on_enter()
 
     def transition(self, state: str):
         Logger.debug(who=self.sock.getsockname(), message=f"[SW] Transitioning to state: {state}")
         self.current_state = self.states[state]
-        self.current_state.on_enter()
+        #self.current_state.on_enter()
 
     def close(self):
         try:
@@ -137,7 +141,7 @@ class StopAndWaitReceiver:
                             Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data extracted={data}")
                             test = f.write(data)
                             Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data written gil={test}")
-                            self.expected_seq ^= 1
+                            self.expected_seq = self.expected_seq + 1
                             Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data written self.expected_seq={self.expected_seq}")
                             
                             Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] Written DATA seq={seq}")

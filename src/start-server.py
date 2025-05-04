@@ -47,6 +47,7 @@ if __name__ == '__main__':
                     continue
                 conn, mode = item
                 raw_sock = conn.socket
+                # TODO: Output path needs to be defined by the Handshake
                 output_path = os.path.join(args.storage, args.name)
 
                 # Check if the protocol is specified
