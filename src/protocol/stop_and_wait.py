@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import socket
 import threading
 from protocol.packet import Packetizer, DefaultPacketizer
-from utils.logger import Logger
+from utils import Logger
 
 class SWState(ABC):
     def __init__(self, ctx):

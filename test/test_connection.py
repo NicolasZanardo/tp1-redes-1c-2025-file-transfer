@@ -1,13 +1,8 @@
 import unittest
 import time
 from src.protocol.server_listener import ServerManager
-from src.utils.logger import Logger, VerbosityLevel
+from src.utils import Logger
 from test.utils_test import UtilsFunction
-
-
-# Set up the logger for the test
-#Logger.setup_name("test/test_connection.py")
-#Logger.setup_verbosity(VerbosityLevel.VERBOSE)
 
 server_addr = "0.0.0.0"
 server_port = 2222
@@ -15,6 +10,15 @@ server_port = 2222
 utils = UtilsFunction()
 
 class TestClientConnection(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        Logger.setup_name("test/test_connection.py")
+
+    @classmethod
+    def tearDownClass(cls):
+        print("\n----------------------------------------\n")
+        print("\n----------------------------------------\n")
+
     def test_connection(self):
         print('')
         utils.setup_test_threads(
@@ -45,13 +49,3 @@ class TestClientConnection(unittest.TestCase):
         socket.send(b"we are connected")
         time.sleep(.25)
         socket.close()
-
-        
-    #def setUp(self):
-    #    # This method will run before each test
-    #    self.client = Client("localhost", 8080, "sw")
-
-    #def tearDown(self):
-    #    # This method will run after each test
-    #    self.client.close()
-

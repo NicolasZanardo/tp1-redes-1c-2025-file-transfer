@@ -20,7 +20,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port'    , metavar='PORT'     , type=int, default=8080, help="service port")
     parser.add_argument('-s', '--storage' , metavar='DIRPATH'  , type=str, default="", help="storage dir path")
     parser.add_argument('-r', '--protocol', metavar='protocol' , help="error recovery protocol")
-    parser.add_argument('-n','--name',   type=str, required=True)
     parser.add_argument('-a','--algorithm',choices=["sw","sr"],default="sw")
     # Parse the arguments
     args = parser.parse_args()

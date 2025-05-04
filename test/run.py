@@ -1,6 +1,6 @@
 import sys
 import unittest
-from src.utils.logger import Logger, VerbosityLevel
+from src.utils import Logger, VerbosityLevel
 
 loader = unittest.TestLoader()
 suite = loader.discover('test')
