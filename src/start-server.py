@@ -1,9 +1,9 @@
 import os
 import sys
 import argparse
-from protocol.selective_repeat import SelectiveRepeatReceiver
+from protocol.selective_repeat import SelectiveRepeatProtocol
 from protocol.server_listener import ServerManager
-from protocol.stop_and_wait import StopAndWaitReceiver
+from protocol.stop_and_wait import StopAndWaitProtocol
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import VerbosityLevel, Logger
 
