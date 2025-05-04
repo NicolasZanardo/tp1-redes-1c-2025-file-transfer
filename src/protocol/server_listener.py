@@ -12,8 +12,8 @@ class ServerManager:
         return server
 
     @staticmethod
-    def connect_to_server(server_addr=('localhost', 8080)):
-        return Handshake.client(server_addr)
+    def connect_to_server(server_addr=('localhost', 8080), mode = "download"):
+        return Handshake.client(server_addr, mode)
 
 class ServerListener:
     def __init__(self, host='localhost', port=8080):
@@ -46,11 +46,11 @@ class ServerListener:
             return None
 
         try:
-            valid_connection = Handshake.server(self.door_address, addr, data)
+            valid_connection, mode = Handshake.server(self.door_address, addr, data)
             self.connections[addr] = valid_connection
 
             Logger.debug(who=self.door_address, message=f"New connection established with {addr} using {valid_connection.source_address}")
-            return valid_connection
+            return valid_connection, mode
         except Exception as e:
             Logger.debug(who=self.door_address, message=f"Handshake failed: {e}")
         return None

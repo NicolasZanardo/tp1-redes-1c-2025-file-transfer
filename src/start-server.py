@@ -1,9 +1,9 @@
 import os
 import sys
 import argparse
-from protocol.selective_repeat import SelectiveRepeatProtocol
+from protocol.selective_repeat import SelectiveRepeatProtocol,SelectiveRepeatReceiver
 from protocol.server_listener import ServerManager
-from protocol.stop_and_wait import StopAndWaitProtocol
+from protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import VerbosityLevel, Logger
 
@@ -42,26 +42,41 @@ if __name__ == '__main__':
     try:
         while True:
             try:
-                conn = server.get_client()
-                if conn is None:
+                item = server.get_client()
+                if item is None:
                     continue
-
+                conn, mode = item
                 raw_sock = conn.socket
                 output_path = os.path.join(args.storage, args.name)
 
                 # Check if the protocol is specified
-                if args.algorithm == "sw":
-                    protocol = StopAndWaitProtocol(
-                    sock=raw_sock,
-                    dest=conn.destination_address,
-                    file_path= output_path
-                )
+                if mode == "download":
+                    if not os.path.isfile(output_path):
+                        raise SystemExit(f"No existe el archivo {output_path}")
+                    if args.algorithm == "sw":
+                        protocol = StopAndWaitProtocol(
+                        sock=raw_sock,
+                        dest=conn.destination_address,
+                        file_path= output_path
+                    )
+                    else:
+                        protocol = SelectiveRepeatProtocol(
+                        sock=raw_sock,
+                        dest=conn.destination_address,
+                        file_path= output_path
+                    )
                 else:
-                    protocol = SelectiveRepeatProtocol(
-                    sock=raw_sock,
-                    dest=conn.destination_address,
-                    file_path= output_path
-                )
+                    #TODO no pisar archivo si existe
+                    if args.algorithm == "sw":
+                        protocol = StopAndWaitReceiver(
+                            sock=raw_sock,
+                            output_path=output_path
+                        )
+                    else:
+                        protocol = SelectiveRepeatReceiver(
+                            sock=raw_sock,
+                            output_path=output_path
+                        )
 
                 try:
                     protocol.start() 

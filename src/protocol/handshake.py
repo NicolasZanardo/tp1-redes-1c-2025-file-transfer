@@ -1,76 +1,69 @@
+# protocol/handshake.py
 import socket
-import time
 from protocol.connection_socket import ConnectionSocket
 from utils.logger import Logger
 
-TIMEOUT = 10
-MAX_RETRIES = 50
+TIMEOUT = 2
+MAX_RETRIES = 5
 
 class Handshake:
     @staticmethod
-    def client(server_addr=('localhost', 8080)):
+    def client(server_addr=('localhost',8080), mode='download'):
+        """
+        mode: 'upload' (cliente envía al servidor) o 'download' (cliente recibe del servidor)
+        """
         skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        skt.bind(('', 0))
+        skt.bind(('',0))
         skt.settimeout(TIMEOUT)
-        own_addr = skt.getsockname()
-        Logger.debug(who=own_addr, message=f"Connecting to server {server_addr}")
+        own = skt.getsockname()
 
-        # === Envío de LOGIN con retry ===
-        for attempt in range(MAX_RETRIES):
+        msg = f"LOGIN:{mode}".encode()
+        for i in range(MAX_RETRIES):
+            Logger.debug(who=own, message=f"Sending {msg!r} to {server_addr} (try {i+1})")
+            skt.sendto(msg, server_addr)
             try:
-                Logger.debug(who=own_addr, message=f"Sending LOGIN to {server_addr} (attempt {attempt+1})")
-                skt.sendto(b'LOGIN', server_addr)
-                Logger.debug(who=own_addr, message=f"Waiting ACK of ('UNKNOWN', unknown)")
-                resp, new_serv_addr = skt.recvfrom(1024)
-                if resp == b'ACK':
-                    break
+                resp, data_addr = skt.recvfrom(1024)
+                if resp.startswith(b"ACK:"):
+                    _, agreed_mode = resp.decode().split(':',1)
+                    if agreed_mode != mode:
+                        raise Exception(f"Inconsistent modes. recieved {agreed_mode} instead of {mode}")
+                    skt.close()
+                    conn = ConnectionSocket(data_addr, own)
+                    # confirm final
+                    conn.send(b"ALL:OK")
+                    return conn, agreed_mode
             except socket.timeout:
-                Logger.debug(who=own_addr, message=f"Timeout waiting ACK, retrying...")
-        else:
-            skt.close()
-            raise Exception("Failed to receive ACK from server after retries.")
-        
+                Logger.debug(who=own, message="Timeout waiting ACK, retrying…")
+            except Exception as e:
+                Logger.error(who=own, message=f"{e}")
+                
         skt.close()
-
-        valid_connection = ConnectionSocket(new_serv_addr, own_addr)
-        for attempt in range(MAX_RETRIES):
-            try:
-                Logger.debug(who=own_addr, message=f"Sent: b'all ok' to {new_serv_addr} (attempt {attempt+1})")
-                valid_connection.send(b'all ok')
-                return valid_connection
-            except socket.timeout:
-                Logger.debug(who=own_addr, message=f"Timeout sending all ok, retrying...")
-
-        valid_connection.close()
-        raise Exception("Failed to send 'all ok' after retries.")
+        raise Exception("Handshake failed (no ACK)")
 
     @staticmethod
-    def server(own_addr=('localhost', 8080), client_addr=('localhost', 8080), client_msg=b'NO LOGIN'):
-        if client_msg != b'LOGIN':
-            raise Exception("Failed to receive LOGIN from client.")
+    def server(own_addr=('localhost',8080), client_addr=None, login_msg=b''):
+        """
+        Devuelve (ConnectionSocket, mode) o lanza.
+        """
+        # login_msg == b"LOGIN:<mode>"
+        try:
+            text = login_msg.decode()
+            prefix, mode = text.split(':',1)
+            if prefix!='LOGIN' or mode not in ('upload','download'):
+                raise
+        except:
+            raise Exception(f"Bad handshake msg {login_msg!r}")
 
-        #host = own_addr[0]
-        valid_connection = ConnectionSocket(client_addr)
-        Logger.debug(
-                who=valid_connection.source_address,
-                message=f"Sending ACK to {client_addr}"
-            )
-        if valid_connection is None:
-            raise Exception("No free connection available")
+        # abrimos nuevo socket efímero
+        conn = ConnectionSocket(client_addr)
+        # devolvemos ACK:<mode>
+        ack = f"ACK:{mode}".encode()
+        Logger.debug(who=conn.source_address, message=f"Sending {ack!r} to {client_addr}")
+        conn.send(ack)
 
-        for attempt in range(MAX_RETRIES):
-            try:
-                Logger.debug(who=valid_connection.source_address, message=f"Sending ACK to {client_addr} (attempt {attempt+1})")
-                valid_connection.send(b'ACK')
-                recieved = valid_connection.get_message()
-                if recieved == b'all ok':
-                    break
-                else:
-                    Logger.debug(who=valid_connection.source_address, message=f"Expected b'all ok' but got {recieved}")
-            except socket.timeout:
-                Logger.debug(who=valid_connection.source_address, message=f"Timeout waiting all ok, retrying...")
-        else:
-            valid_connection.close()
-            raise Exception("Failed to receive 'all ok' after retries.")
-
-        return valid_connection
+        # ahora recibimos el ALL:OK
+        resp = conn.get_message()
+        if resp!=b"ALL:OK":
+            conn.close()
+            raise Exception(f"Expected ALL:OK, got {resp!r}")
+        return conn, mode

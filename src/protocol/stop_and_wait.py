@@ -134,8 +134,12 @@ class StopAndWaitReceiver:
 
                         if seq == self.expected_seq:
                             data = self.packetizer.extract_data(packet)
-                            f.write(data)
+                            Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data extracted={data}")
+                            test = f.write(data)
+                            Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data written gil={test}")
                             self.expected_seq ^= 1
+                            Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] data written self.expected_seq={self.expected_seq}")
+                            
                             Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] Written DATA seq={seq}")
                         else:
                             Logger.debug(who=self.sock.getsockname(), message="[SW-Receiver] Duplicate/out-of-order packet ignored.")

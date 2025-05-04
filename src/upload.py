@@ -1,4 +1,5 @@
 import argparse
+import os
 from protocol.selective_repeat import SelectiveRepeatProtocol
 from protocol.stop_and_wait import StopAndWaitProtocol
 from protocol.server_listener import ServerManager
@@ -33,23 +34,34 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    connection = ServerManager.connect_to_server((args.host, args.port))
-    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}")
+    connection, mode = ServerManager.connect_to_server((args.host, args.port), "upload")
+    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, con modo {mode}")
     
     udp_socket = connection.socket
+    
+    # construir ruta de fichero correcta
+    if os.path.isdir(args.src):
+        # si -s es carpeta, unir nombre
+        file_path = os.path.join(args.src, args.name)
+    else:
+        # si -s es archivo
+        file_path = args.src
+
+    if not os.path.isfile(file_path):
+        raise SystemExit(f"No existe el archivo {file_path}")
 
     # Check if the protocol is specified
     if args.algorithm == "sw":
         protocol = StopAndWaitProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=args.src
+            file_path=file_path
         )
     else:
         protocol = SelectiveRepeatProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=args.src
+            file_path=file_path
         )
 
     try:

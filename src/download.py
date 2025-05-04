@@ -1,5 +1,6 @@
 import argparse
 
+import os
 import time
 from protocol.stop_and_wait import StopAndWaitReceiver
 from protocol.selective_repeat import SelectiveRepeatReceiver
@@ -38,11 +39,15 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    connection = ServerManager.connect_to_server((args.host, args.port))
-    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}")
+    connection, mode = ServerManager.connect_to_server((args.host, args.port), "download")
+    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
     
     udp_socket = connection.socket
+    file_path = os.path.join(args.src, args.name)
 
+
+
+    
     if args.algorithm == "sw":
         protocol = StopAndWaitReceiver(
             sock=udp_socket,
@@ -60,4 +65,4 @@ if __name__ == '__main__':
     finally:
         protocol.close()      
         connection.close()    
-        Logger.info("Upload completed and connection closed.")
+        Logger.info("Download completed and connection closed.")
