@@ -49,16 +49,25 @@ if __name__ == '__main__':
                 raw_sock = conn.socket
                 output_path = os.path.join(args.storage, args.name)
 
+                # Check if the protocol is specified
                 if args.algorithm == "sw":
-                    protocol = StopAndWaitReceiver(raw_sock, output_path)
+                    protocol = StopAndWaitProtocol(
+                    sock=raw_sock,
+                    dest=conn.destination_address,
+                    file_path= output_path
+                )
                 else:
-                    protocol = SelectiveRepeatReceiver(raw_sock, output_path)
+                    protocol = SelectiveRepeatProtocol(
+                    sock=raw_sock,
+                    dest=conn.destination_address,
+                    file_path= output_path
+                )
 
                 try:
-                    protocol.start()   
+                    protocol.start() 
                 except Exception as e:
                     Logger.error(f"Error durante la transferencia: {e}")
-                finally:
+                finally: 
                     try: protocol.close()
                     except OSError:
                         pass

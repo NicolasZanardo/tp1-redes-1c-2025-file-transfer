@@ -1,9 +1,12 @@
 import argparse
-import time
-from protocol.stop_and_wait import StopAndWaitProtocol
-from protocol.selective_repeat import SelectiveRepeatProtocol
 
-from src import *
+import time
+from protocol.stop_and_wait import StopAndWaitReceiver
+from protocol.selective_repeat import SelectiveRepeatReceiver
+from protocol.server_listener import ServerManager
+from utils.custom_help_formatter import CustomHelpFormatter
+from utils.logger import VerbosityLevel, Logger 
+
 
 if __name__ == '__main__':
     # Custom help formatter to preserve manual spacing
@@ -41,16 +44,14 @@ if __name__ == '__main__':
     udp_socket = connection.socket
 
     if args.algorithm == "sw":
-        protocol = StopAndWaitProtocol(
+        protocol = StopAndWaitReceiver(
             sock=udp_socket,
-            dest=connection.destination_address,
-            file_path=args.src
+            output_path=args.src
         )
     else:
-        protocol = SelectiveRepeatProtocol(
+        protocol = SelectiveRepeatReceiver(
             sock=udp_socket,
-            dest=connection.destination_address,
-            file_path=args.src
+            output_path=args.src
         )
 
     # Start the download process
