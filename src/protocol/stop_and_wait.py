@@ -101,7 +101,10 @@ class StopAndWaitProtocol:
         self.current_state.on_enter()
 
     def close(self):
-        self.sock.close()
+        try:
+            self.sock.close()
+        except OSError:
+            pass
         Logger.debug(who=self.dest, message="Socket closed.")
 
 class StopAndWaitReceiver:
@@ -151,8 +154,10 @@ class StopAndWaitReceiver:
         Logger.info(f"[SW-Receiver] File received and saved to {self.output_path}")
         
     def close(self):
-        self.sock.close()
+        try:
+            self.sock.close()
+        except OSError:
+            pass
         Logger.debug(
-            who=self.sock.getsockname(),
             message=f"[SW-Receiver] Socket closed for output {self.output_path}"
         )

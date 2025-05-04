@@ -86,6 +86,10 @@ class SelectiveRepeatProtocol:
     def close(self):
         for t in self.timers.values():
             t.cancel()
+        try:
+            self.sock.close()
+        except OSError:
+            pass
         self.sock.close()
         Logger.debug(who=self.dest, message="Socket closed.")
 
@@ -142,5 +146,8 @@ class SelectiveRepeatReceiver:
         Logger.info(f"[SR-Receiver] File saved to {self.output_path}")
 
     def close(self):
-        self.sock.close()
-        Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] Socket closed for {self.output_path}")
+        try:
+            self.sock.close()
+        except OSError:
+            pass
+        Logger.debug(message=f"[SR-Receiver] Socket closed for {self.output_path}")
