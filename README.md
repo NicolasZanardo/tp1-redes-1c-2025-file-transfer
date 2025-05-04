@@ -51,7 +51,7 @@ sudo mn --custom mytopo.py --topo mytopo
 Iniciar cliente en h1 y server en h2
 ```bash
 mininet> h1 python3 src/start-server.py -H 0.0.0.0 -p 11111 -s serverfiles/ &
-mininet> h2 python3 src/upload.py -H 10.0.0.2 -p 11111 &
+mininet> h2 python3 src/upload.py -H h1 -p 11111 &
 ```
 Verificar inicialización
 ```bash
@@ -69,9 +69,9 @@ mininet> sh ifconfig s2-eth2 mtu 1000
 ```
 Generar trafico con **iperf** (con tamaño > MTU para generar **fragmentacion**)
 ```bash
-mininet> h2 iperf -s -u &
+mininet> h1 iperf -s -u &
 //Si el MTU es menor que 2000, el tráfico se fragmentará.
-mininet> h1 iperf -c 10.0.0.2 -u -b 10M -l 2000 -t 30 
+mininet> h2 iperf -c h1 -u -b 10M -l 2000 -t 30 
 ```
 
 
