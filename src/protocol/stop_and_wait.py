@@ -131,7 +131,7 @@ class StopAndWaitReceiver:
                     Logger.debug(
                         who=self.sock.getsockname(),
                         message=f"[SW-Receiver] Raw packet received from {addr}: {packet!r}"
-)
+                    )
                     if self.packetizer.is_data(packet):
                         seq = self.packetizer.extract_seq(packet)
                         Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] Received DATA seq={seq} from {addr}")

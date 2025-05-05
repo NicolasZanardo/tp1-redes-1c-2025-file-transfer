@@ -19,8 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--port'     , metavar='PORT'     , type=int, default=12345, help="Server port")
     parser.add_argument('-s', '--src'      , metavar='DIRPATH'  , type=str, default="", help="Source file path")
     parser.add_argument('-n', '--name'     , metavar='FILENAME' , type=str, default="", help="File name")
-    parser.add_argument('-r', '--protocol' , metavar='protocol' , help="error recovery protocol")
-    parser.add_argument('-a', '--algorithm', choices=["sw","sr"], default="sw")
+    parser.add_argument('-r', '--protocol' , metavar='protocol' , choices=["sw","sr"], default="sw" ,help="error recovery protocol")
 
     # Parse the arguments
     args = parser.parse_args()
@@ -34,24 +33,21 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    connection, mode = ServerManager.connect_to_server((args.host, args.port), "upload", args.name)
+    behaviour(args)
+
+def behaviour(args):
+    connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "upload", args.name)
     Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, con modo {mode}")
     
     udp_socket = connection.socket
     
-    # construir ruta de fichero correcta
-    if os.path.isdir(args.src):
-        # si -s es carpeta, unir nombre
-        file_path = os.path.join(args.src, args.name)
-    else:
-        # si -s es archivo
-        file_path = args.src
+    file_path = args.src
 
     if not os.path.isfile(file_path):
         raise SystemExit(f"No existe el archivo {file_path}")
 
     # Check if the protocol is specified
-    if args.algorithm == "sw":
+    if args.protocol == "sw":
         protocol = StopAndWaitProtocol(
             sock=udp_socket,
             dest=connection.destination_address,

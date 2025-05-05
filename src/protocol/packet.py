@@ -39,10 +39,10 @@ class DefaultPacketizer(Packetizer):
     TYPE_TERM = 0x03
 
     def make_data_packet(self, seq, data):
-        return bytes([self.TYPE_DATA]) + seq.to_bytes(4) + data
+        return bytes([self.TYPE_DATA]) + seq.to_bytes(4, byteorder='big') + data
 
     def make_ack_packet(self, seq):
-        return bytes([self.TYPE_ACK]) + seq.to_bytes(4)
+        return bytes([self.TYPE_ACK]) + seq.to_bytes(4, byteorder='big')
 
     def make_terminate_packet(self):
         return bytes([self.TYPE_TERM])
@@ -51,7 +51,7 @@ class DefaultPacketizer(Packetizer):
         return bool(packet) and packet[0] == self.TYPE_ACK
 
     def extract_seq(self, packet):
-        return int.from_bytes(packet[1:5]) if len(packet) > 1 else None
+        return int.from_bytes(packet[1:5], byteorder='big') if len(packet) > 1 else None
 
     def is_data(self, packet):
         return bool(packet) and packet[0] == self.TYPE_DATA and len(packet) > 5

@@ -6,10 +6,12 @@ import time
 class UtilsFunction(unittest.TestCase):
     def setup_test_threads(self, server_function, client_function, timeout=3):
         server_thread = threading.Thread(target=server_function)
+        server_thread.daemon = True
         server_thread.start()
         time.sleep(0.25)  # Give it a moment to start properly
 
         client_thread = threading.Thread(target=client_function)
+        client_thread.daemon = True
         client_thread.start()
 
         client_thread.join(timeout = timeout)

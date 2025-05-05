@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import threading
 from protocol.selective_repeat import SelectiveRepeatProtocol,SelectiveRepeatReceiver
 from protocol.server_listener import ServerManager
 from protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
@@ -31,6 +32,10 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
+    behaviour(args)
+
+def behaviour(args):
+    
     if not os.path.isdir(args.storage):
         raise SystemExit(f"{args.storage} no es un directorio válido")
 
@@ -44,49 +49,14 @@ if __name__ == '__main__':
                 if item is None:
                     continue
                 conn, mode, filename = item
-                raw_sock = conn.socket
-                # TODO: Output path needs to be defined by the Handshake
-                output_path = os.path.join(args.storage, filename)
-
-                # Check if the protocol is specified
-                if mode == "download":
-                    if not os.path.isfile(output_path):
-                        raise SystemExit(f"No existe el archivo {output_path}")
-                    if args.protocol == "sw":
-                        protocol = StopAndWaitProtocol(
-                        sock=raw_sock,
-                        dest=conn.destination_address,
-                        file_path= output_path
-                    )
-                    else:
-                        protocol = SelectiveRepeatProtocol(
-                        sock=raw_sock,
-                        dest=conn.destination_address,
-                        file_path= output_path
-                    )
-                else:
-                    #TODO no pisar archivo si existe
-                    if args.protocol == "sw":
-                        protocol = StopAndWaitReceiver(
-                            sock=raw_sock,
-                            output_path=output_path
-                        )
-                    else:
-                        protocol = SelectiveRepeatReceiver(
-                            sock=raw_sock,
-                            output_path=output_path
-                        )
-
-                try:
-                    protocol.start() 
-                except Exception as e:
-                    Logger.error(f"Error durante la transferencia: {e}")
-                finally: 
-                    try: protocol.close()
-                    except OSError:
-                        pass
-                    conn.close()
-                    Logger.info("Conexión con cliente finalizada.")
+                
+                # Create a new thread for each client
+                client_thread = threading.Thread(
+                    target=handle_client,
+                    args=(conn, mode, filename, args.storage, args.protocol)
+                )
+                client_thread.daemon = True  # Threads terminate when main thread exits
+                client_thread.start()
 
             except KeyboardInterrupt:
                 Logger.info("Keyboard interrupt, shutting down server.")
@@ -98,3 +68,51 @@ if __name__ == '__main__':
         server.stop()
         Logger.info("Server stopped.")
 
+
+def handle_client(conn, mode, filename, storage, protocol_choice):
+    """Handle a single client connection in a separate thread."""
+    try:
+        raw_sock = conn.socket
+        output_path = os.path.join(storage, filename)
+
+        # Select protocol based on mode and protocol choice
+        if mode == "download":
+            if not os.path.isfile(output_path):
+                Logger.error(f"No existe el archivo {output_path}")
+                return
+            if protocol_choice == "sw":
+                protocol = StopAndWaitProtocol(
+                    sock=raw_sock,
+                    dest=conn.destination_address,
+                    file_path=output_path
+                )
+            else:
+                protocol = SelectiveRepeatProtocol(
+                    sock=raw_sock,
+                    dest=conn.destination_address,
+                    file_path=output_path
+                )
+        else:
+            # TODO: Avoid overwriting existing file
+            if protocol_choice == "sw":
+                protocol = StopAndWaitReceiver(
+                    sock=raw_sock,
+                    output_path=output_path
+                )
+            else:
+                protocol = SelectiveRepeatReceiver(
+                    sock=raw_sock,
+                    output_path=output_path
+                )
+
+        try:
+            protocol.start()
+        except Exception as e:
+            Logger.error(f"Error durante la transferencia: {e}")
+    finally:
+        try:
+            protocol.close()
+        except (OSError, NameError):  # NameError if protocol not initialized
+            pass
+        conn.close()
+        Logger.info(f"Conexión con cliente {conn.destination_address} finalizada.")

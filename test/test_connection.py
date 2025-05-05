@@ -23,6 +23,14 @@ class TestClientConnection(unittest.TestCase):
             timeout=3
         )
 
+    def test_two_connection(self):
+        print('')
+        utils.setup_test_threads(
+            self._test_connection_server, 
+            self._test_connection_client_twice, 
+            timeout=3
+        )
+
     def _test_connection_server(self):
         # Test if the server is running and can accept connections
         server = ServerManager.start_server(host=server_addr, port=server_port)
@@ -35,6 +43,30 @@ class TestClientConnection(unittest.TestCase):
 
     def _test_connection_client(self):
         # Test if the client can connect to the server
+        socket, mode, filename = ServerManager.connect_to_server(
+            ("localhost", server_port), "download", "myfile"
+        )
+
+        time.sleep(.25)
+
+        socket.send(b"we are connected")
+        time.sleep(.25)
+        socket.close()
+    
+
+    def _test_connection_client_twice(self):
+        # Test if the client can connect to the server
+        socket, mode, filename = ServerManager.connect_to_server(
+            ("localhost", server_port), "download", "myfile"
+        )
+
+        time.sleep(.25)
+
+        socket.send(b"we are connected")
+        time.sleep(.25)
+        socket.close()
+
+
         socket, mode, filename = ServerManager.connect_to_server(
             ("localhost", server_port), "download", "myfile"
         )
