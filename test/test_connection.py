@@ -16,8 +16,8 @@ class TestClientConnection(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n----------------------------------------\n")
-        print("\n----------------------------------------\n")
+        print("\n----------------------------------------")
+        print("----------------------------------------\n")
 
     def test_connection(self):
         print('')

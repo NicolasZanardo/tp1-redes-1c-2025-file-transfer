@@ -1,6 +1,6 @@
 from typing import Iterator
 
-class FileReader():
+class FileReader:
     def __init__(self, file_path: str):
         self.file_path = file_path
 
@@ -12,7 +12,7 @@ class FileReader():
                     break
                 yield data
 
-class FileWriter():
+class FileWriter:
     def __init__(self, output_path: str):
         self.file = open(output_path, 'wb')
 
@@ -26,7 +26,7 @@ class FileChunkReader:
     def __init__(self, file_path: str, chunk_size: int = 1024):
         self.file_path = file_path
         self.chunk_size = chunk_size
-        self.file = open(file_path, 'rb')
+        self.file = open(self.file_path, 'rb')
 
     def __iter__(self):
         return self

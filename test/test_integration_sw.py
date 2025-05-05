@@ -6,7 +6,7 @@ import time
 
 from src.utils import FileChunkReader, Logger
 from src.protocol.packet import DefaultPacketizer
-from src.protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
+from src.protocol.stop_and_wait_lib import StopAndWaitProtocol, StopAndWaitReceiver
 
 TEST_FILE_CONTENT = b"Hello, this is a test file.\nAnother line.\n"
 TEST_INPUT_PATH = "test/temp_input.txt"
@@ -28,8 +28,11 @@ class TestStopAndWaitIntegration(unittest.TestCase):
         os.remove(TEST_INPUT_PATH)
         if os.path.exists(TEST_OUTPUT_PATH):
             os.remove(TEST_OUTPUT_PATH)
-        print("\n----------------------------------------\n")
-        print("\n----------------------------------------\n")
+        print("\n----------------------------------------")
+        print("----------------------------------------\n")
+
+    def setUp(self):
+        print('')
 
     def test_send_and_receive_file_over_udp(self):
         packetizer = DefaultPacketizer()
@@ -68,5 +71,4 @@ class TestStopAndWaitIntegration(unittest.TestCase):
             received_data = f.read()
 
         self.assertEqual(received_data, TEST_FILE_CONTENT)
-        print(f"Received data:\n'{received_data.decode()}'")
 

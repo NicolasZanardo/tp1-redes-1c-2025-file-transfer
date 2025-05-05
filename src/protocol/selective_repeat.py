@@ -22,7 +22,7 @@ class SelectiveRepeatProtocol:
         self.total = len(self.packets)
         self.send_event = threading.Event()
         self.sock.settimeout(timeout + 0.1)
-        Logger.debug(who=self.sock.getsockname(), message=f"SR init for {dest}, file:{file_path}, win:{window_size}")
+        Logger.debug(who=self.sock.getsockname(), message=f"SRP init for {dest}, file:{file_path}, win:{window_size}")
 
     def _file_reader(self, chunk_size=1024):
         with open(self.file_path, 'rb') as f:
@@ -33,7 +33,7 @@ class SelectiveRepeatProtocol:
                 yield data
 
     def start(self):
-        Logger.info(f"[SR] Starting transfer to {self.dest}")
+        Logger.info(f"[SRP] Starting transfer to {self.dest}")
         threading.Thread(target=self._receive_acks, daemon=True).start()
         with self.lock:
             while self.next_seq < self.base + self.window_size and self.next_seq < self.total:
@@ -42,12 +42,12 @@ class SelectiveRepeatProtocol:
         self.send_event.wait()
         term = self.packetizer.make_terminate_packet()
         self.sock.sendto(term, self.dest)
-        Logger.info("[SR] Transfer completed.")
+        Logger.info("[SRP] Transfer completed.")
 
     def _send(self, seq):
         packet = self.packetizer.make_data_packet(seq, self.packets[seq])
         self.sock.sendto(packet, self.dest)
-        Logger.debug(who=self.sock.getsockname(), message=f"[SR] Sent seq={seq}")
+        Logger.debug(who=self.sock.getsockname(), message=f"[SRP] Sent seq={seq}")
         timer = threading.Timer(self.timeout, self._timeout, args=(seq,))
         self.timers[seq] = timer
         timer.start()
@@ -55,7 +55,7 @@ class SelectiveRepeatProtocol:
     def _timeout(self, seq):
         with self.lock:
             if not self.acked.get(seq, False):
-                Logger.debug(who=self.sock.getsockname(), message=f"[SR] Timeout seq={seq}, retransmitting")
+                Logger.debug(who=self.sock.getsockname(), message=f"[SRP] Timeout seq={seq}, retransmitting")
                 self._send(seq)
 
     def _receive_acks(self):
@@ -64,7 +64,7 @@ class SelectiveRepeatProtocol:
                 packet, _ = self.sock.recvfrom(2048)
                 if self.packetizer.is_ack(packet):
                     seq = self.packetizer.extract_seq(packet)
-                    Logger.debug(who=self.sock.getsockname(), message=f"[SR] Received ACK seq={seq}")
+                    Logger.debug(who=self.sock.getsockname(), message=f"[SRP] Received ACK seq={seq}")
                     with self.lock:
                         if self.base <= seq < self.base + self.window_size:
                             self.acked[seq] = True
@@ -85,7 +85,10 @@ class SelectiveRepeatProtocol:
 
     def close(self):
         for t in self.timers.values():
-            t.cancel()
+            try:
+                t.cancel()
+            finally:
+                pass
         try:
             self.sock.close()
         except OSError:
@@ -95,8 +98,7 @@ class SelectiveRepeatProtocol:
 
 
 class SelectiveRepeatReceiver:
-    def __init__(self, sock: socket.socket, output_path: str,
-                 packetizer: Packetizer = None, timeout: float = 1.0, window_size: int = 4):
+    def __init__(self, sock: socket.socket, output_path: str, packetizer: Packetizer = None, timeout: float = 1.0, window_size: int = 4):
         self.sock = sock
         self.output_path = output_path
         self.packetizer = packetizer or DefaultPacketizer()
@@ -106,7 +108,7 @@ class SelectiveRepeatReceiver:
         self.buffer = {}  
         self.running = True
         self.sock.settimeout(timeout + 0.1)
-        Logger.debug(who=self.sock.getsockname(), message=f"SR Receiver init, output:{output_path}, win:{window_size}")
+        Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] init, output:{output_path}, win:{window_size}")
 
     def start(self):
         Logger.info("[SR-Receiver] Receiver started.")

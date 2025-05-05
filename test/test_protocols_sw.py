@@ -1,9 +1,10 @@
 import unittest
+import tempfile
 from unittest.mock import Mock, patch, call, MagicMock
 
 from src.utils import FileChunkReader, Logger
 from src.protocol.packet import DefaultPacketizer
-from src.protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
+from src.protocol.stop_and_wait_lib import StopAndWaitProtocol, StopAndWaitReceiver
 
 
 class TestStopAndWaitProtocol(unittest.TestCase):
@@ -13,8 +14,8 @@ class TestStopAndWaitProtocol(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print("\n----------------------------------------\n")
-        print("\n----------------------------------------\n")
+        print("\n----------------------------------------")
+        print("----------------------------------------\n")
 
     def setUp(self):
         # Setup mock socket
@@ -24,11 +25,9 @@ class TestStopAndWaitProtocol(unittest.TestCase):
         self.data_chunks = [b"chunk1", b"chunk2"]
         self.reader = iter(self.data_chunks)
         print('')
-
-    @patch('utils.file_reader.FileChunkReader')
-    def test_sender_transfers_all_chunks_and_terminates(self, mock_reader_class):
-        mock_reader_class.return_value = iter(self.data_chunks)
-
+    
+    def test_sender_transfers_all_chunks_and_terminates(self):
+        
         # Patch socket sendto
         sock = Mock()
         sock.getsockname.return_value = self.dest
@@ -37,7 +36,9 @@ class TestStopAndWaitProtocol(unittest.TestCase):
             (self.packetizer.make_ack_packet(1), self.dest)
         ]
 
-        sender = StopAndWaitProtocol(sock=sock, dest=self.dest, file_path="dummy.txt", packetizer=self.packetizer)
+        sender = None
+        with tempfile.NamedTemporaryFile(delete=False) as input_file:
+            sender = StopAndWaitProtocol(sock=sock, dest=self.dest, file_path=input_file.name, packetizer=self.packetizer)
         sender.reader = iter(self.data_chunks)  # Replace reader
         sender.start()
 

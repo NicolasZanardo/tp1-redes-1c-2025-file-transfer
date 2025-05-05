@@ -1,7 +1,9 @@
 import socket
+from utils import Logger
+from utils.file_handler import FileChunkReader
+
 from protocol.packet import DefaultPacketizer
-from utils import Logger, FileChunkReader
-from protocol.state_machine.stop_and_wait.state_machine import *
+from .state_machine import *
 
 class StopAndWaitProtocol:
     def __init__(self, sock: socket.socket, dest: tuple, file_path: str,
@@ -9,9 +11,9 @@ class StopAndWaitProtocol:
         self.sock = sock
         self.dest = dest
         self.file_path = file_path
+        self.reader = FileChunkReader(self.file_path)
         self.timeout = timeout
         self.seq = 0
-        self.reader = FileChunkReader(file_path)
         self.packetizer = packetizer or DefaultPacketizer()
         self.states = {
             'idle': IdleState(self),
