@@ -14,7 +14,7 @@ def behaviour(args):
 
     udp_socket = connection.socket
     
-    file_path = args.src
+    file_path = os.path.join(args.src, args.name)
 
     Logger.debug(f"Nombre de archivo enviado en handshake args.name: {args.name}")
 
