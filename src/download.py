@@ -39,7 +39,7 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    connection, mode = ServerManager.connect_to_server((args.host, args.port), "download")
+    connection, mode = ServerManager.connect_to_server((args.host, args.port), "download", args.name)
     Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
     
     udp_socket = connection.socket

@@ -26,18 +26,17 @@ class TestClientConnection(unittest.TestCase):
     def _test_connection_server(self):
         # Test if the server is running and can accept connections
         server = ServerManager.start_server(host=server_addr, port=server_port)
-        cli_socket = server.get_client()
+        cli_socket, mode, filename = server.get_client()
 
         self.assertIsNotNone(cli_socket, "Server is not accepting connections")
         self.assertTrue(cli_socket.get_message() == b"we are connected", "Coudnt receive message in correct format from client")
-
 
         server.stop()
 
     def _test_connection_client(self):
         # Test if the client can connect to the server
-        socket = ServerManager.connect_to_server(
-            ("localhost", server_port)
+        socket, mode, filename = ServerManager.connect_to_server(
+            ("localhost", server_port), "download", "myfile"
         )
 
         time.sleep(.25)
@@ -46,7 +45,6 @@ class TestClientConnection(unittest.TestCase):
         time.sleep(.25)
         socket.close()
 
-        
     #def setUp(self):
     #    # This method will run before each test
     #    self.client = Client("localhost", 8080, "sw")

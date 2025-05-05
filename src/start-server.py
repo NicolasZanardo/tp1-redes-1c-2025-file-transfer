@@ -19,9 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-H', '--host'    , metavar='ADDR'     , type=str, default="127.0.0.1", help="service IP address")
     parser.add_argument('-p', '--port'    , metavar='PORT'     , type=int, default=8080, help="service port")
     parser.add_argument('-s', '--storage' , metavar='DIRPATH'  , type=str, default="", help="storage dir path")
-    parser.add_argument('-r', '--protocol', metavar='protocol' , help="error recovery protocol")
-    parser.add_argument('-n','--name',   type=str, required=True)
-    parser.add_argument('-a','--algorithm',choices=["sw","sr"],default="sw")
+    parser.add_argument('-r', '--protocol', metavar='protocol' , choices=["sw","sr"],default="sw", help="error recovery protocol")
     # Parse the arguments
     args = parser.parse_args()
 
@@ -45,16 +43,16 @@ if __name__ == '__main__':
                 item = server.get_client()
                 if item is None:
                     continue
-                conn, mode = item
+                conn, mode, filename = item
                 raw_sock = conn.socket
                 # TODO: Output path needs to be defined by the Handshake
-                output_path = os.path.join(args.storage, args.name)
+                output_path = os.path.join(args.storage, filename)
 
                 # Check if the protocol is specified
                 if mode == "download":
                     if not os.path.isfile(output_path):
                         raise SystemExit(f"No existe el archivo {output_path}")
-                    if args.algorithm == "sw":
+                    if args.protocol == "sw":
                         protocol = StopAndWaitProtocol(
                         sock=raw_sock,
                         dest=conn.destination_address,
@@ -68,7 +66,7 @@ if __name__ == '__main__':
                     )
                 else:
                     #TODO no pisar archivo si existe
-                    if args.algorithm == "sw":
+                    if args.protocol == "sw":
                         protocol = StopAndWaitReceiver(
                             sock=raw_sock,
                             output_path=output_path
