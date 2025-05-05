@@ -3,7 +3,7 @@ import socket
 from protocol.connection_socket import ConnectionSocket
 from utils.logger import Logger
 
-TIMEOUT = 2
+TIMEOUT = 10
 MAX_RETRIES = 5
 
 class Handshake:

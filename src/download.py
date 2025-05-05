@@ -8,6 +8,31 @@ from protocol.server_listener import ServerManager
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import VerbosityLevel, Logger 
 
+def behaviour(args):
+    connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "download", args.name)
+    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
+    
+    udp_socket = connection.socket
+    file_path = args.dst
+    
+    if args.protocol == "sw":
+        protocol = StopAndWaitReceiver(
+            sock=udp_socket,
+            output_path=args.dst
+        )
+    else:
+        protocol = SelectiveRepeatReceiver(
+            sock=udp_socket,
+            output_path=args.dst
+        )
+
+    # Start the download process
+    try:
+        protocol.start()
+    finally:
+        protocol.close()      
+        connection.close()    
+        Logger.info("Download completed and connection closed.")
 
 if __name__ == '__main__':
     # Custom help formatter to preserve manual spacing
@@ -40,28 +65,4 @@ if __name__ == '__main__':
 
     behaviour(args)
 
-def behaviour(args):
-    connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "download", args.name)
-    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
-    
-    udp_socket = connection.socket
-    file_path = args.dst
-    
-    if args.protocol == "sw":
-        protocol = StopAndWaitReceiver(
-            sock=udp_socket,
-            output_path=args.dst
-        )
-    else:
-        protocol = SelectiveRepeatReceiver(
-            sock=udp_socket,
-            output_path=args.dst
-        )
 
-    # Start the download process
-    try:
-        protocol.start()
-    finally:
-        protocol.close()      
-        connection.close()    
-        Logger.info("Download completed and connection closed.")
