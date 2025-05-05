@@ -1,5 +1,6 @@
 import socket
 from utils.logger import Logger
+from .connection_clossing import ConnectionClossing
 
 class ConnectionSocket:
     def __init__(self, destination_address, source_address=None):
@@ -24,8 +25,6 @@ class ConnectionSocket:
         
         if data != b'ACK':
             Logger.debug(who=self.source_address, message=f"Sent: {data} to {self.destination_address}")
-            
-
 
     def receive(self):
         data, addr = self.socket.recvfrom(1024)
@@ -33,6 +32,12 @@ class ConnectionSocket:
         if addr != self.destination_address:
             Logger.debug(who=self.source_address, message=f"Received data from unexpected address: {addr}")
             return self.receive()
+
+        if data == b'CLOSE':
+            Logger.debug(who=self.source_address, message=f"Received CLOSE from {addr}, sending CLOSE_ACK")
+            ConnectionClossing.respond_to_clossing(self.socket, addr)
+            self.is_closing = True
+            raise ConnectionClosedError("Connection closed by remote side")
 
         elif data == b'ACK':
             Logger.debug(who=self.source_address, message=f"ACK received from {addr}")
@@ -46,9 +51,25 @@ class ConnectionSocket:
         return data, addr
 
     def close(self):
-        self.socket.close()
-        Logger.debug(who=self.source_address, message=f"Socket closed from {self.source_address} to {self.destination_address}")
-        self.socket = None
+        if self.socket is None:
+            Logger.debug(who=self.source_address, message="Socket already closed")
+            return
+        
+        try:
+            if ConnectionClossing.begin_close(self.socket, self.destination_address):
+                Logger.debug(who=self.source_address, message="Closing handshake completed")
+            else:
+                Logger.error(who=self.source_address, message="Closing handshake failed")
+        except Exception as e:
+            Logger.error(who=self.source_address, message=f"Error during closing handshake: {e}")
+        finally:
+            try:
+                self.socket.close()
+                Logger.debug(who=self.source_address, message=f"Socket closed from {self.source_address} to {self.destination_address}")
+            except Exception as e:
+                Logger.error(who=self.source_address, message=f"Error closing socket: {e}")
+            self.socket = None
+
 
     def get_message(self, timeout=2, max_retries=5):
         self.socket.settimeout(timeout)

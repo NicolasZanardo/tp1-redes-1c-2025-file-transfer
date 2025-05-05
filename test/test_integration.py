@@ -102,8 +102,14 @@ class TestServerClientIntegration(unittest.TestCase):
             protocol=self.protocol  # Will be updated in tests
         )
         
+        self.server_stop_event = Namespace(
+            running = True
+        )
+        
         # Start server in a separate thread
-        start_server.behaviour(self.server_args)
+        start_server.behaviour(self.server_args, self.server_stop_event)
+
+        Logger.info("Server stoped in test.")
 
     def _test_upload_and_download_CLIENT(self):
         """Helper to test upload followed by download."""
@@ -161,7 +167,9 @@ class TestServerClientIntegration(unittest.TestCase):
 
         Logger.debug(who="TEST", message="BEGIN WITH DOWNLOAD")
         download.behaviour(download_args)
-        
+        Logger.debug(who="TEST", message="-------------END WITH DOWNLOAD----------------")
+
+
         # Verify downloaded file
         self.assertTrue(os.path.isfile(self.client_output_file), "Downloaded file not found")
         self.assertEqual(
@@ -169,3 +177,6 @@ class TestServerClientIntegration(unittest.TestCase):
             self._compute_file_hash(self.client_output_file),
             "Downloaded file hash mismatch"
         )
+
+        Logger.debug(who="TEST", message="TELL SERVER TO STOP")
+        self.server_stop_event.running = False

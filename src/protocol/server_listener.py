@@ -40,7 +40,7 @@ class ServerListener:
             data, addr = self.socket.recvfrom(1024)
         except socket.timeout:
             Logger.debug(who=self.door_address, message="Timeout waiting for new connection")
-            return self.get_client()  # Timeout if no data received
+            return None
         except Exception as e:
             Logger.debug(who=self.door_address, message=f"Error receiving data: {e}")
             return None

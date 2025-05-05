@@ -34,16 +34,20 @@ if __name__ == '__main__':
 
     behaviour(args)
 
-def behaviour(args):
-    
+def behaviour(args, stop_event=None):
+    """Run the server, stopping when stop_event is set."""
     if not os.path.isdir(args.storage):
         raise SystemExit(f"{args.storage} no es un directorio válido")
 
     server = ServerManager.start_server(host=args.host, port=args.port)
     Logger.info(f"Server listening on {args.host}:{args.port}")
+    clients = []
+
+    if stop_event is None:
+        stop_event = Namespace(running=True)
 
     try:
-        while True:
+        while stop_event.running:
             try:
                 item = server.get_client()
                 if item is None:
@@ -57,14 +61,17 @@ def behaviour(args):
                 )
                 client_thread.daemon = True  # Threads terminate when main thread exits
                 client_thread.start()
+                clients.append(client_thread)
 
             except KeyboardInterrupt:
+                stop_event.running = False
                 Logger.info("Keyboard interrupt, shutting down server.")
-                break
 
             except Exception as e:
                 Logger.error(f"Error aceptando cliente: {e}")
     finally:
+        for cli in clients:
+            cli.join(timeout=0.25)
         server.stop()
         Logger.info("Server stopped.")
 
