@@ -16,7 +16,7 @@ def behaviour(args):
     
     file_path = args.src
 
-    Logger.debug(f"Nombre de archivo enviado en handshake: {file_path}")
+    Logger.debug(f"Nombre de archivo enviado en handshake args.name: {args.name}")
 
     if not os.path.isfile(file_path):
         raise SystemExit(f"No existe el archivo {file_path}")

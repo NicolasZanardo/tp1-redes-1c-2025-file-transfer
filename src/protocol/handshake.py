@@ -47,6 +47,7 @@ class Handshake:
 
     @staticmethod
     def server(own_addr=('localhost',8080), client_addr=None, login_msg=b''):
+        Logger.debug(f"Loggin msg recibido: {login_msg!r} from {client_addr}")
         """
         Devuelve (ConnectionSocket, mode) o lanza.
         """
@@ -72,4 +73,6 @@ class Handshake:
         if resp!=b"ALL:OK":
             conn.close()
             raise Exception(f"Expected ALL:OK, got {resp!r}")
+        
+        Logger.debug(f"Handshake server enviando conn, mode, filename: {conn}, {mode}, {filename}")
         return conn, mode, filename

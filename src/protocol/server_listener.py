@@ -38,6 +38,7 @@ class ServerListener:
         # Wait for incoming data
         try:
             data, addr = self.socket.recvfrom(1024)
+            Logger.debug(f"get:client recibe de socket: {data}, addr: {addr}")
         except socket.timeout:
             Logger.debug(who=self.door_address, message="Timeout waiting for new connection")
             return None

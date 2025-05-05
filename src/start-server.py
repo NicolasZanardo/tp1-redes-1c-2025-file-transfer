@@ -11,7 +11,7 @@ from argparse import Namespace
 from protocol.connection_clossing import ConnectionClossing
 
 
-def handle_client(conn, mode, file_path, storage, protocol_choice):
+def handle_client(conn, mode, file_path, protocol_choice):
     """Handle a single client connection in a separate thread."""
     try:
         raw_sock = conn.socket
@@ -87,16 +87,17 @@ def behaviour(args, stop_event=None):
                 item = server.get_client()
                 if item is None:
                     continue
-                conn, mode = item
+                conn, mode, filename = item
+                Logger.debug(f"Nombre de archivo recibido: {filename}")
                 
-                output_path = os.path.join(args.storage, args.name)
+                output_path = os.path.join(args.storage, filename)
 
                 Logger.debug(f"Nombre de archivo recibido: {output_path}")
                 
                 # Create a new thread for each client
                 client_thread = threading.Thread(
                     target=handle_client,
-                    args=(conn, mode, output_path, args.storage, args.protocol)
+                    args=(conn, mode, output_path, args.protocol)
                 )
                 client_thread.daemon = True  # Threads terminate when main thread exits
                 client_thread.start()
