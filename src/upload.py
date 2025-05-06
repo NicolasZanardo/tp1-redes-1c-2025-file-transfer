@@ -8,44 +8,35 @@ from utils.logger import Logger, VerbosityLevel
 from protocol.connection_clossing import ConnectionClossing
 
 def behaviour(args):
+    
+    if not os.path.isfile(args.src):
+        raise SystemExit(f"No existe el archivo {args.src}")
+    
     connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "upload", args.name)
     Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, con modo {mode}")
 
-
     udp_socket = connection.socket
     
-    file_path = args.src
-
-    Logger.debug(f"Nombre de archivo enviado en handshake: {file_path}")
-
-    if not os.path.isfile(file_path):
-        raise SystemExit(f"No existe el archivo {file_path}")
+    Logger.debug(f"Nombre de archivo enviado en handshake: {filename}")
 
     # Check if the protocol is specified
     if args.protocol == "sw":
         protocol = StopAndWaitProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=file_path
+            file_path=args.src
         )
     else:
         protocol = SelectiveRepeatProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=file_path
+            file_path=args.src
         )
 
     try:
         protocol.start()
     finally:
-        # Iniciar el closing handshake
-        if ConnectionClossing.begin_close(udp_socket, connection.destination_address):
-            Logger.info("Closing handshake completed successfully.")
-        else:
-            Logger.error("Closing handshake failed.")
-
         # Cerrar el protocolo y la conexión
-        protocol.close()
         connection.close()
         Logger.info("Upload completed and connection closed.")
 
