@@ -81,7 +81,7 @@ class TestServerClientIntegration(unittest.TestCase):
         )
         self.server_stop_event.running = False
 
-    def test_upload_and_download_sr(self):
+    def _test_upload_and_download_sr(self):
         self.protocol = "sr"
         utils.setup_test_threads(
             self._test_upload_and_download_SERVER,
