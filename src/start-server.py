@@ -63,10 +63,8 @@ def handle_client(conn, mode, file_path, storage, protocol_choice):
                Logger.info(f"Closing handshake completed with {conn.destination_address}")
             else:
                 Logger.error(f"Closing handshake failed with {conn.destination_address}")
-            protocol.close()
         except (OSError, NameError):  # NameError if protocol not initialized
             pass
-        conn.close()
         Logger.info(f"Conexión con cliente {conn.destination_address} finalizada.")
 
 def behaviour(args, stop_event=None):
@@ -87,9 +85,9 @@ def behaviour(args, stop_event=None):
                 item = server.get_client()
                 if item is None:
                     continue
-                conn, mode = item
+                conn, mode, filename = item
                 
-                output_path = os.path.join(args.storage, args.name)
+                output_path = os.path.join(args.storage, filename)
 
                 Logger.debug(f"Nombre de archivo recibido: {output_path}")
                 
