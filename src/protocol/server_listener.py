@@ -20,7 +20,7 @@ class ServerListener:
         self.door_address = (host, port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind(self.door_address)
-        self.socket.settimeout(2)
+        self.socket.settimeout(4)
         self.connections = {}
         self.running = False
         Logger.debug(who=self.door_address, message=f"Server setup on {self.door_address}")

@@ -15,47 +15,45 @@ start_server = importlib.import_module('start-server')
 # Assume LossySocket is available and mimics socket.socket with packet loss
 #from protocol.lossy_socket import LossySocket
 
-from test.utils_test import UtilsFunction
+from test.utils_test import UtilsFunction, SocketTestParams
 utils = UtilsFunction()
 
 class TestServerClientIntegration(unittest.TestCase):
     def setUp(self):
+        # Setup logger
+        Logger.setup_name('test_integration.py')
+        print('')
+        
         # Create temporary directories for server storage and client files
         self.server_storage = tempfile.mkdtemp()
         self.client_dir = tempfile.mkdtemp()
         
-        # Setup logger
-        Logger.setup_name('test_integration.py')
-        
-        # Server parameters
-        self.host = "127.0.0.1"
-        self.port = 54321  # Use a high port to avoid conflicts
-        
-        # Mock socket to use LossySocket
-        #self.patcher = patch('socket.socket', LossySocket)
-        #self.patcher.start()
-        
         # Wait briefly for server to start
         time.sleep(0.1)
         
-        # Test file content
-        self.test_input_file = "input.txt"
-        self.test_output_file = "output.txt"
-        
-        # Create a test file in client directory
-        self.client_input_file = os.path.join(self.client_dir, self.test_input_file)
-        self.client_output_file = os.path.join(self.client_dir, self.test_output_file)
+        self.client_input_file = self._make_test_file(self.client_dir, "input.txt")
+        self.client_output_file = self._make_test_file(self.client_dir, "output.txt")
 
         self.server_file_name = "middleman.txt"
+        self._make_test_file(self.server_storage, self.server_file_name)
         
         self.test_file_content = b"Hello, this is a test file!"
         with open(self.client_input_file, 'wb') as f:
             f.write(self.test_file_content)
         
-    def tearDown(self):
-        # Stop mocking
-        #self.patcher.stop()
+        self.host = "127.0.0.1"
+        self.port = 54321
+
+    def _make_test_file(self, dirpath, name):
+        """Create a test file with some content."""
+        file_path = os.path.join(dirpath, name)
+        if os.path.exists(file_path):
+            os.remove(file_path)
         
+        return file_path
+
+
+    def tearDown(self):
         # Clean up temporary directories
         for temp_dir in [self.server_storage, self.client_dir]:
             for root, dirs, files in os.walk(temp_dir, topdown=False):
@@ -78,7 +76,7 @@ class TestServerClientIntegration(unittest.TestCase):
         utils.setup_test_threads(
             self._test_upload_and_download_SERVER,
             self._test_upload_and_download_CLIENT,
-            5
+            15
         )
         self.server_stop_event.running = False
 
@@ -87,7 +85,7 @@ class TestServerClientIntegration(unittest.TestCase):
         utils.setup_test_threads(
             self._test_upload_and_download_SERVER,
             self._test_upload_and_download_CLIENT,
-            5
+            15
         )
         self.server_stop_event.running = False
     
@@ -99,7 +97,7 @@ class TestServerClientIntegration(unittest.TestCase):
             host=self.host,
             port=self.port,
             storage=self.server_storage,
-            protocol=self.protocol  # Will be updated in tests
+            protocol=self.protocol
         )
         
         self.server_stop_event = Namespace(
@@ -129,7 +127,7 @@ class TestServerClientIntegration(unittest.TestCase):
         
         # Verify uploaded file on server
         server_file_path = os.path.join(self.server_storage, self.server_file_name)
-        self.assertTrue(os.path.isfile(server_file_path), "Uploaded file not found on server")
+        self.assertTrue(os.path.isfile(server_file_path), f"Uploaded file not found on server '{server_file_path}'")
         
         with open(self.client_input_file, 'rb') as f:
             original_content = f.read()

@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser(
 # Add arguments to the parser
 parser.add_argument('-v', '--verbose'  , action='store_true', help="increase output verbosity")
 parser.add_argument('-q', '--quiet'    , action='store_true', help="decrease output verbosity")
+parser.add_argument('-l', '--lossy'   , metavar='LOSSRATE' , help="how much packet loss to simulate", type=float, default=0.0)
 args = parser.parse_args()
 
 ConnectionConfig.TIMEOUT = 0.125
@@ -36,4 +37,17 @@ else:
 # to ensure the correct level is applied
 Logger.setup_name("test/run.py")
 
-result = runner.run(suite)
+if 0.0 < args.lossy <= 1.0:
+    Logger.info(f"Simulando una tasa de pérdida de paquetes del {args.lossy * 100:.2f}%")
+
+    # If lossy is set, we need to patch the socket module
+    from unittest.mock import patch
+    from test.utils_test import LossySocket, SocketTestParams
+
+    # Patch the socket module to use the LossySocket class
+    SocketTestParams.LOSS_RATE = args.lossy
+    args.lossy = 0.0  # Reset lossy to 0.0 for the actual upload
+    with patch('socket.socket', new=LossySocket):
+        result = runner.run(suite)
+else:
+    result = runner.run(suite)

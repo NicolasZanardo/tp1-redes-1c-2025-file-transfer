@@ -52,24 +52,11 @@ class LossySocket:
         if random.random() >= self.loss_rate:
             self.sock.sendto(data, addr)
         else:
-            Logger.debug(who=f"[Lossy-Socket {self.sock.getsockname()}]", message=f"I didn't sent the data to {addr}")
+            Logger.info(who=f"================== [Lossy-Socket {self.sock.getsockname()}]", message=f"I didn't sent the data to {addr} ==================")
+            Logger.debug(who=f"======== [Lossy-Socket {self.sock.getsockname()}]", message=f"[{data}] ==================")
 
     def recvfrom(self, bufsize):
-        try:
-            if self.stored:
-                return self.stored.pop(0)
-            else:
-                data, addr = self.sock.recvfrom(bufsize)
-                if random.random() <= self.loss_rate:
-                    Logger.debug(who=f"[Lossy-Socket {self.sock.getsockname()}]", message=f"I changed the order of the packets sent to {addr}")
-                    self.stored.append((data, addr))
-                    return self.sock.recvfrom(bufsize)
-                return data, addr
-        except std_socket.timeout:
-            if self.stored:
-                return self.stored.pop(0)
-            else:
-                raise std_socket.timeout("Simulated packet loss")
+        return self.sock.recvfrom(bufsize)
 
     def bind(self, addr):
         self.sock.bind(addr)
