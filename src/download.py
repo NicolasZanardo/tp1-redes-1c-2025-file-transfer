@@ -30,7 +30,6 @@ def behaviour(args):
     try:
         protocol.start()
     finally:
-        protocol.close()      
         connection.close()    
         Logger.info("Download completed and connection closed.")
 
