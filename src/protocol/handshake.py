@@ -16,6 +16,7 @@ class Handshake:
         skt.bind(('',0))
         skt.settimeout(TIMEOUT)
         own = skt.getsockname()
+        Logger.debug(who=own, message=f"Client handshake to {server_addr} with mode '{mode}' and filename '{filename}'")
 
         msg = f"LOGIN:{mode}:{filename}".encode()
         for i in range(MAX_RETRIES):
@@ -51,6 +52,7 @@ class Handshake:
         """
         Devuelve (ConnectionSocket, mode) o lanza.
         """
+        Logger.debug(who=own_addr, message=f"server handshake from {client_addr} with {login_msg!r}")
         # login_msg == b"LOGIN:<mode>"
         try:
             text = login_msg.decode()

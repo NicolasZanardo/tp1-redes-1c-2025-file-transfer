@@ -56,8 +56,6 @@ class ServerListener:
             Logger.debug(who=self.door_address, message=f"Handshake failed: {e}")
         return None
     
-    
-
     def stop(self):
         self.running = False
         self.socket.close()

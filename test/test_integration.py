@@ -82,6 +82,7 @@ class TestServerClientIntegration(unittest.TestCase):
             self._test_upload_and_download_CLIENT,
             5
         )
+        self.server_stop_event.running = False
 
     def test_upload_and_download_sr(self):
         self.protocol = "sr"
@@ -90,6 +91,7 @@ class TestServerClientIntegration(unittest.TestCase):
             self._test_upload_and_download_CLIENT,
             5
         )
+        self.server_stop_event.running = False
     
     def _test_upload_and_download_SERVER(self):
         # Mock server arguments
