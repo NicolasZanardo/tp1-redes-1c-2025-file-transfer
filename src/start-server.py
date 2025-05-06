@@ -8,7 +8,7 @@ from protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import VerbosityLevel, Logger
 from argparse import Namespace
-from protocol.connection_clossing import ConnectionClossing
+from src.protocol.connection_closing import ConnectionClosing
 
 
 def handle_client(conn, mode, file_path, protocol_choice):
@@ -59,7 +59,7 @@ def handle_client(conn, mode, file_path, protocol_choice):
     finally:
         try:
             # Realizar el closing handshake
-            if ConnectionClossing.respond_to_clossing(raw_sock, conn.destination_address):
+            if ConnectionClosing.respond_to_closing(raw_sock, conn.destination_address):
                Logger.info(f"Closing handshake completed with {conn.destination_address}")
             else:
                 Logger.error(f"Closing handshake failed with {conn.destination_address}")

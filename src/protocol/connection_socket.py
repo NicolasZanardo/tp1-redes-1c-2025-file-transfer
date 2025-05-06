@@ -1,6 +1,6 @@
 import socket
 from utils.logger import Logger
-from .connection_clossing import ConnectionClossing
+from .connection_closing import ConnectionClosing
 
 class ConnectionSocket:
     def __init__(self, destination_address, source_address=None):
@@ -35,7 +35,7 @@ class ConnectionSocket:
 
         if data == b'CLOSE':
             Logger.debug(who=self.source_address, message=f"Received CLOSE from {addr}, sending CLOSE_ACK")
-            ConnectionClossing.respond_to_clossing(self.socket, addr)
+            ConnectionClosing.respond_to_closing(self.socket, addr)
             self.is_closing = True
             raise ConnectionClosedError("Connection closed by remote side")
 
@@ -56,7 +56,7 @@ class ConnectionSocket:
             return
         
         try:
-            if ConnectionClossing.begin_close(self.socket, self.destination_address):
+            if ConnectionClosing.begin_close(self.socket, self.destination_address):
                 Logger.debug(who=self.source_address, message="Closing handshake completed")
             else:
                 Logger.error(who=self.source_address, message="Closing handshake failed")

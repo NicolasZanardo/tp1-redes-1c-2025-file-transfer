@@ -5,7 +5,6 @@ from protocol.stop_and_wait import StopAndWaitProtocol
 from protocol.server_listener import ServerManager
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import Logger, VerbosityLevel
-from protocol.connection_clossing import ConnectionClossing
 
 def behaviour(args):
     
