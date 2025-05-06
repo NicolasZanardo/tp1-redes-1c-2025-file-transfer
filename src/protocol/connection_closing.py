@@ -1,83 +1,85 @@
-from utils.logger import Logger
 import socket
+from utils import Logger, RetryHandler
 
-TIMEOUT = 10
-MAX_RETRIES = 5
+class ConnectionConfig:
+    TIMEOUT = 10
+    MAX_RETRIES = 5
 
-class ConnectionClosing:
-    @classmethod
-    def begin_close(cls, sock: socket.socket, peer_address):
-        """Cliente inicia el cierre con un 4-way handshake"""
+retrier = RetryHandler(
+    retries=ConnectionConfig.MAX_RETRIES,
+)
 
-        for i in range(MAX_RETRIES):
-            try:
-                sock.sendto(b'CLOSE', peer_address)
-                Logger.debug(who=sock.getsockname(), message=f"Sent CLOSE (attempt {i+1})")
-                sock.settimeout(TIMEOUT)
-                data, _ = sock.recvfrom(1024)
-                if data == b'CLOSE_ACK':
-                    Logger.debug(who=sock.getsockname(), message="Received CLOSE_ACK")
-                    break
-            except socket.timeout:
-                Logger.debug(who=sock.getsockname(), message="Timeout waiting CLOSE_ACK, retrying...")
-        else:
-            Logger.error("Failed to receive CLOSE_ACK after retries")
-            return False
-
-        for i in range(MAX_RETRIES):
-            try:
-                sock.settimeout(TIMEOUT)
-                data, _ = sock.recvfrom(1024)
-                if data == b'FIN':
-                    Logger.debug(who=sock.getsockname(), message="Received FIN")
-                    break
-            except socket.timeout:
-                Logger.debug(who=sock.getsockname(), message="Timeout waiting FIN, retrying...")
-        else:
-            Logger.error("Failed to receive FIN after retries")
-            return False
-
-        for i in range(MAX_RETRIES):
-            try:
-                sock.sendto(b'FIN_ACK', peer_address)
-                Logger.debug(who=sock.getsockname(), message=f"Sent FIN_ACK (attempt {i+1})")
-                return True
-            except socket.timeout:
-                Logger.debug(who=sock.getsockname(), message="Timeout sending FIN_ACK, retrying...")
-        Logger.error("Failed to send FIN_ACK after retries")
-        return False
+class ConnectionClosingProtocol:
+    FIN = b"FIN"
+    ACK = b"ACKFIN"
 
     @classmethod
-    def respond_to_closing(cls, sock: socket.socket, addr):
-        """Servidor responde al close"""
+    def start_closing_handshake(cls, sock: socket.socket, peer_address: tuple):
+        sock.settimeout(ConnectionConfig.TIMEOUT)
+        return (
+            cls._send_fin(sock, peer_address) and
+            #cls._wait_ack(sock, peer_address) and 
+            cls._wait_peer_fin(sock, peer_address) and
+            cls._send_final_ack(sock, peer_address)
+        )
 
+    @classmethod
+    def _send_fin(cls, sock, addr):
+        Logger.debug(who=sock.getsockname(), message=f"===== CLOSING _send_fin to {addr}")
+        def send_fin(attempt):
+            sock.sendto(cls.FIN, addr)
+            Logger.debug(who=sock.getsockname(), message=f"Sent FIN (attempt {attempt})")
+            return True
+
+        return retrier.run(
+            action=send_fin,
+            logger_who=sock.getsockname(),
+            action_description="Sending FIN"
+        )
+
+    @classmethod
+    def _wait_ack(cls, sock, addr):
+        Logger.debug(who=sock.getsockname(), message=f"===== CLOSING _wait_ack to {addr}")
+        def wait_ack(_):
+            data, _ = sock.recvfrom(1024)
+            if data != cls.ACK:
+                raise socket.timeout()
+            Logger.debug(who=sock.getsockname(), message="Received ACKFIN")
+            return True
+
+        return retrier.run(
+            action=wait_ack,
+            logger_who=sock.getsockname(),
+            action_description="Waiting for ACKFIN"
+        )
+
+    @classmethod
+    def _wait_peer_fin(cls, sock, addr):
+        Logger.debug(who=sock.getsockname(), message=f"===== CLOSING _wait_peer_fin to {addr}")
+        def wait_fin(_):
+            while True:
+                data, _ = sock.recvfrom(1024)
+                if not data.startswith(b"ACK"):
+                    break
+            if data != cls.FIN:
+                raise ValueError(f"Expected FIN, got {data}")
+            Logger.debug(who=sock.getsockname(), message="Received peer's FIN")
+            return True
+        
+        return retrier.run(
+            action=wait_fin,
+            logger_who=sock.getsockname(),
+            action_description="Waiting for peer FIN"
+        )
+
+    @classmethod
+    def _send_final_ack(cls, sock, addr):
+        Logger.debug(who=sock.getsockname(), message=f"===== CLOSING _send_final_ack to {addr}")
         try:
-            sock.settimeout(None)
-            data, client_addr = sock.recvfrom(1024)
-            if data != b'CLOSE':
-                raise Exception(f"Expected CLOSE, got {data!r}")
-            Logger.debug(who=sock.getsockname(), message="Received CLOSE")
+            sock.sendto(cls.ACK, addr)
+            Logger.debug(who=sock.getsockname(), message="Sent final ACKFIN")
+            return True
         except Exception as e:
-            Logger.error(f"Error waiting CLOSE: {e}")
-            return False
-
-        for i in range(MAX_RETRIES):
-            try:
-                sock.sendto(b'CLOSE_ACK', client_addr)
-                Logger.debug(who=sock.getsockname(), message=f"Sent CLOSE_ACK (attempt {i+1})")
-                sock.sendto(b'FIN', client_addr)
-                Logger.debug(who=sock.getsockname(), message=f"Sent FIN (attempt {i+1})")
-                
-                sock.settimeout(TIMEOUT)
-
-                ack, _ = sock.recvfrom(1024)
-                if ack == b'FIN_ACK':  
-                    Logger.debug(who=sock.getsockname(), message="Received FIN_ACK")
-                    
-                    return True
-            except socket.timeout:
-                Logger.debug(who=sock.getsockname(), message="Timeout waiting echo of CLOSE_ACK, retrying...")
-        else:
-            Logger.error("Failed to confirm CLOSE_ACK echo")
+            Logger.error(who=sock.getsockname(), message=f"Failed to send final ACK: {e}")
         
         return False

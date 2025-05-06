@@ -8,7 +8,7 @@ class UtilsFunction(unittest.TestCase):
         server_thread = threading.Thread(target=server_function)
         server_thread.daemon = True
         server_thread.start()
-        time.sleep(0.25)  # Give it a moment to start properly
+        time.sleep(0.125)  # Give it a moment to start properly
 
         client_thread = threading.Thread(target=client_function)
         client_thread.daemon = True

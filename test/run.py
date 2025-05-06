@@ -3,6 +3,7 @@ import unittest
 import argparse
 import random
 from src.utils import Logger, VerbosityLevel, CustomHelpFormatter
+from src.protocol.connection_closing import ConnectionConfig
 
 loader = unittest.TestLoader()
 suite = loader.discover('test')
@@ -21,6 +22,7 @@ parser.add_argument('-v', '--verbose'  , action='store_true', help="increase out
 parser.add_argument('-q', '--quiet'    , action='store_true', help="decrease output verbosity")
 args = parser.parse_args()
 
+ConnectionConfig.TIMEOUT = 0.125
 
 if args.verbose:
     Logger.setup_verbosity(VerbosityLevel.VERBOSE)

@@ -8,8 +8,7 @@ from protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
 from utils.custom_help_formatter import CustomHelpFormatter
 from utils.logger import VerbosityLevel, Logger
 from argparse import Namespace
-from src.protocol.connection_closing import ConnectionClosing
-
+from protocol.connection_closing import ConnectionClosingProtocol
 
 def handle_client(conn, mode, file_path, protocol_choice):
     """Handle a single client connection in a separate thread."""
@@ -59,13 +58,11 @@ def handle_client(conn, mode, file_path, protocol_choice):
     finally:
         try:
             # Realizar el closing handshake
-            if ConnectionClosing.respond_to_closing(raw_sock, conn.destination_address):
-               Logger.info(f"Closing handshake completed with {conn.destination_address}")
-            else:
-                Logger.error(f"Closing handshake failed with {conn.destination_address}")
+            conn.close()
         except (OSError, NameError):  # NameError if protocol not initialized
             pass
         Logger.info(f"Conexión con cliente {conn.destination_address} finalizada.")
+
 
 def behaviour(args, stop_event=None):
     """Run the server, stopping when stop_event is set."""

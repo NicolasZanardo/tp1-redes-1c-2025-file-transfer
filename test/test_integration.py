@@ -8,14 +8,12 @@ from argparse import Namespace
 from unittest.mock import patch
 from utils.logger import Logger, VerbosityLevel
 
-
 import upload
 import download
 import importlib
 start_server = importlib.import_module('start-server')
 # Assume LossySocket is available and mimics socket.socket with packet loss
 #from protocol.lossy_socket import LossySocket
-
 
 from test.utils_test import UtilsFunction
 utils = UtilsFunction()
