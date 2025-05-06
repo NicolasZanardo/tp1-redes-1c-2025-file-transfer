@@ -61,7 +61,6 @@ class CompletedState(SWState):
         terminator = self.ctx.packetizer.make_terminate_packet()
         self.ctx.sock.sendto(terminator, self.ctx.dest)
         Logger.info(f"[SW] Transfer completed to {self.ctx.dest}")
-        self.ctx.close()
         self.ctx.completed = True
         return 
 
