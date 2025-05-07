@@ -30,7 +30,8 @@ def behaviour(args):
             sock=udp_socket,
             dest=connection.destination_address,
             file_path=args.src,
-            timeout=ConnectionConfig.TIMEOUT
+            timeout=ConnectionConfig.TIMEOUT,
+            window_size=ConnectionConfig.SR_WINDOW_SIZE
         )
 
     try:

@@ -37,7 +37,8 @@ def handle_client(conn, mode, file_path, protocol_choice):
                     sock=raw_sock,
                     dest=conn.destination_address,
                     file_path=file_path,
-                    timeout=ConnectionConfig.TIMEOUT
+                    timeout=ConnectionConfig.TIMEOUT,
+                    window_size=ConnectionConfig.SR_WINDOW_SIZE
                 )
         else:
             # TODO: Avoid overwriting existing file
@@ -51,7 +52,8 @@ def handle_client(conn, mode, file_path, protocol_choice):
                 protocol = SelectiveRepeatReceiver(
                     sock=raw_sock,
                     output_path=file_path,
-                    timeout=ConnectionConfig.TIMEOUT
+                    timeout=ConnectionConfig.TIMEOUT,
+                    window_size=ConnectionConfig.SR_WINDOW_SIZE
                 )
 
         try:

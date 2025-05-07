@@ -24,7 +24,8 @@ def behaviour(args):
         protocol = SelectiveRepeatReceiver(
             sock=udp_socket,
             output_path=args.dst,
-            timeout=ConnectionConfig.TIMEOUT
+            timeout=ConnectionConfig.TIMEOUT,
+            window_size=ConnectionConfig.SR_WINDOW_SIZE
         )
 
     # Start the download process
