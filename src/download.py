@@ -5,8 +5,7 @@ import time
 from protocol.stop_and_wait import StopAndWaitReceiver
 from protocol.selective_repeat import SelectiveRepeatReceiver
 from protocol.server_listener import ServerManager
-from utils.custom_help_formatter import CustomHelpFormatter
-from utils.logger import VerbosityLevel, Logger 
+from utils import VerbosityLevel, Logger, CustomHelpFormatter, ConnectionConfig
 
 def behaviour(args):
     connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "download", args.name)
@@ -18,12 +17,14 @@ def behaviour(args):
     if args.protocol == "sw":
         protocol = StopAndWaitReceiver(
             sock=udp_socket,
-            output_path=args.dst
+            output_path=args.dst,
+            timeout=ConnectionConfig.TIMEOUT
         )
     else:
         protocol = SelectiveRepeatReceiver(
             sock=udp_socket,
-            output_path=args.dst
+            output_path=args.dst,
+            timeout=ConnectionConfig.TIMEOUT
         )
 
     # Start the download process

@@ -1,9 +1,5 @@
 import socket
-from utils import Logger, RetryHandler
-
-class ConnectionConfig:
-    TIMEOUT = 10
-    MAX_RETRIES = 5
+from utils import Logger, RetryHandler, ConnectionConfig
 
 retrier = RetryHandler(
     retries=ConnectionConfig.MAX_RETRIES,

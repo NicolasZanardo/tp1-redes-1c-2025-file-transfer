@@ -5,10 +5,9 @@ import threading
 from protocol.selective_repeat import SelectiveRepeatProtocol,SelectiveRepeatReceiver
 from protocol.server_listener import ServerManager
 from protocol.stop_and_wait import StopAndWaitProtocol, StopAndWaitReceiver
-from utils.custom_help_formatter import CustomHelpFormatter
-from utils.logger import VerbosityLevel, Logger
 from argparse import Namespace
 from protocol.connection_closing import ConnectionClosingProtocol
+from utils import VerbosityLevel, Logger, ConnectionConfig, CustomHelpFormatter
 
 def handle_client(conn, mode, file_path, protocol_choice):
     """Handle a single client connection in a separate thread."""
@@ -30,25 +29,29 @@ def handle_client(conn, mode, file_path, protocol_choice):
                 protocol = StopAndWaitProtocol(
                     sock=raw_sock,
                     dest=conn.destination_address,
-                    file_path=file_path
+                    file_path=file_path,
+                    timeout=ConnectionConfig.TIMEOUT
                 )
             else:
                 protocol = SelectiveRepeatProtocol(
                     sock=raw_sock,
                     dest=conn.destination_address,
-                    file_path=file_path
+                    file_path=file_path,
+                    timeout=ConnectionConfig.TIMEOUT
                 )
         else:
             # TODO: Avoid overwriting existing file
             if protocol_choice == "sw":
                 protocol = StopAndWaitReceiver(
                     sock=raw_sock,
-                    output_path=file_path
+                    output_path=file_path,
+                    timeout=ConnectionConfig.TIMEOUT
                 )
             else:
                 protocol = SelectiveRepeatReceiver(
                     sock=raw_sock,
-                    output_path=file_path
+                    output_path=file_path,
+                    timeout=ConnectionConfig.TIMEOUT
                 )
 
         try:

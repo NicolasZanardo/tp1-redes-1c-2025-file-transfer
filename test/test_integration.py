@@ -37,9 +37,16 @@ class TestServerClientIntegration(unittest.TestCase):
         self.server_file_name = "middleman.txt"
         self._make_test_file(self.server_storage, self.server_file_name)
         
-        self.test_file_content = b"Hello, this is a test file!"
+        #target_size = 5 * 1_048_576  # 5,242,880 bytes
+        target_size = int(.5 * 1_048_576)  # 5,242,880 bytes
+        # Create a repeated byte pattern to reach that size
+        pattern = b"Hello, this is a test file!"  # 27 bytes
+        repeats = target_size // len(pattern)
+        remainder = target_size % len(pattern)
+
+        # Write the repeated pattern to the file
         with open(self.client_input_file, 'wb') as f:
-            f.write(self.test_file_content)
+            f.write(pattern * repeats + pattern[:remainder])
         
         self.host = "127.0.0.1"
         self.port = 54321
@@ -128,20 +135,6 @@ class TestServerClientIntegration(unittest.TestCase):
         # Verify uploaded file on server
         server_file_path = os.path.join(self.server_storage, self.server_file_name)
         self.assertTrue(os.path.isfile(server_file_path), f"Uploaded file not found on server '{server_file_path}'")
-        
-        with open(self.client_input_file, 'rb') as f:
-            original_content = f.read()
-        with open(server_file_path, 'rb') as f:
-            uploaded_content = f.read()
-        
-        Logger.debug(who="TEST", message=f"ORIGINAL: {original_content}")
-        Logger.debug(who="TEST", message=f"UPLOADED: {uploaded_content}")
-        
-        self.assertEqual(
-            original_content,
-            uploaded_content,
-            "Uploaded file hash mismatch"
-        )
         
         self.assertEqual(
             self._compute_file_hash(self.client_input_file),

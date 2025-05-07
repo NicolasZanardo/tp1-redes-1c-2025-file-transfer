@@ -1,10 +1,7 @@
 # protocol/handshake.py
 import socket
 from protocol.connection_socket import ConnectionSocket
-from utils.logger import Logger
-
-TIMEOUT = 5
-MAX_RETRIES = 5
+from utils import Logger, ConnectionConfig
 
 class Handshake:
     @staticmethod
@@ -14,12 +11,12 @@ class Handshake:
         """
         skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         skt.bind(('',0))
-        skt.settimeout(TIMEOUT)
+        skt.settimeout(ConnectionConfig.TIMEOUT)
         own = skt.getsockname()
         Logger.debug(who=own, message=f"Client handshake to {server_addr} with mode '{mode}' and filename '{filename}'")
 
         msg = f"LOGIN:{mode}:{filename}".encode()
-        for i in range(MAX_RETRIES):
+        for i in range(ConnectionConfig.MAX_RETRIES):
             Logger.debug(who=own, message=f"Sending {msg!r} to {server_addr} (try {i+1})")
             skt.sendto(msg, server_addr)
             try:

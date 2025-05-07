@@ -23,7 +23,7 @@ parser.add_argument('-q', '--quiet'    , action='store_true', help="decrease out
 parser.add_argument('-l', '--lossy'   , metavar='LOSSRATE' , help="how much packet loss to simulate", type=float, default=0.0)
 args = parser.parse_args()
 
-ConnectionConfig.TIMEOUT = 0.125
+ConnectionConfig.TIMEOUT = 0.5
 
 if args.verbose:
     Logger.setup_verbosity(VerbosityLevel.VERBOSE)

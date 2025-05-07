@@ -3,8 +3,7 @@ import os
 from protocol.selective_repeat import SelectiveRepeatProtocol
 from protocol.stop_and_wait import StopAndWaitProtocol
 from protocol.server_listener import ServerManager
-from utils.custom_help_formatter import CustomHelpFormatter
-from utils.logger import Logger, VerbosityLevel
+from utils import Logger, VerbosityLevel, CustomHelpFormatter, ConnectionConfig
 
 def behaviour(args):
     
@@ -23,13 +22,15 @@ def behaviour(args):
         protocol = StopAndWaitProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=args.src
+            file_path=args.src,
+            timeout=ConnectionConfig.TIMEOUT
         )
     else:
         protocol = SelectiveRepeatProtocol(
             sock=udp_socket,
             dest=connection.destination_address,
-            file_path=args.src
+            file_path=args.src,
+            timeout=ConnectionConfig.TIMEOUT
         )
 
     try:
