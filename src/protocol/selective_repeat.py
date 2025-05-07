@@ -137,7 +137,7 @@ class SelectiveRepeatReceiver:
                             if seq >= 0:
                                 nak = self.packetizer.make_ack_packet(seq)
                                 self.sock.sendto(nak, addr)
-                                Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] Resent ACK seq={last_ack}")
+                                Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] Resent ACK seq={seq}")
                     elif self.packetizer.is_terminate(packet):
                         Logger.info("[SR-Receiver] Received terminate.")
                         self.running = False
