@@ -26,6 +26,7 @@ python -m test.run [-vv] [-vq]
 ```bash
 python3 ./src/start-server.py -H 0.0.0.0 -p 11111 -s ./serverfiles -v 
 python3 ./src/upload.py -H 0.0.0.0 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v 
+python3 ./src/download.py -H 0.0.0.0 -p 11111 -d /home/damaris/clientfiles/prueba5Mdownload.txt -n file_udp.txt -v 
 ```
 
 ## Como expandir el proyecto sin romper test o instalador
@@ -53,9 +54,15 @@ Iniciar cliente en h1 y server en h2
 // sw
 <mininet> h1 python3 ./src/start-server.py -H 10.0.0.1 -p 11111 -s ./serverfiles -v  > logfile 2> errorlogfile  & 
 <mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v > logupload 2> errorlogupload 
+
+<mininet> h2 python3 ./src/download.py -H 10.0.0.1 -p 11111 -d /home/damaris/clientfiles/prueba5Mdownload.txt -n file_udp.txt -v > logupload 2> errorlogupload 
+
 // sr
 <mininet> h1 python3 ./src/start-server.py -H 10.0.0.1 -p 11111 -s ./serverfiles -v -r sr > logfile 2> errorlogfile   & 
 <mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v -r sr > logupload 2> errorlogupload 
+
+<mininet> h2 python3 ./src/download.py -H 10.0.0.1 -p 11111 -d /home/damaris/clientfiles/prueba5Mdownload.txt -n file_udp.txt -v -r sr> logupload 2> errorlogupload 
+
 
 ```
 Verificar inicialización
@@ -82,3 +89,4 @@ mininet> h1 iperf -c h2 -u -b 10M -l 2000 -t 5
 mininet> h2 iperf -s &                              
 mininet> h1 iperf -c h2 -b 10M -M 1400 -t 5 
 ```
+
