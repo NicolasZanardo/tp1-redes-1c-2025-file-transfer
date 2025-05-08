@@ -1,4 +1,5 @@
 from mininet.topo import Topo
+from mininet.link import TCLink  # Importar TCLink para configurar MTU
 
 class MyTopo(Topo):
     def __init__(self):
@@ -16,8 +17,6 @@ class MyTopo(Topo):
         # Conectar switches en cadena: s1 -- s2 -- s3
         self.addLink(s1, s2)
         self.addLink(s2, s3)
-        
-        # Conectar h1 a s1 y h2 a s3
         self.addLink(h1, s1)
         self.addLink(h2, s3)
 
