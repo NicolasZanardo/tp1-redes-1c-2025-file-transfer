@@ -172,3 +172,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+errorlogfile
+errorlogupload
+logfile
+logupload
+traffic.pcap
