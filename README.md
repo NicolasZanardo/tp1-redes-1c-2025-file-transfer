@@ -24,8 +24,8 @@ python -m test.run [-vv] [-vq]
 4. **Ejecutar la aplicacion** utilizando las linas de comando que siguen en distintas terminales de comando:
 
 ```bash
-python src/start-server.py -H 0.0.0.0 -p 11111 -s serverfiles/
-python src/upload.py -H 0.0.0.0 -p 11111
+python3 ./src/start-server.py -H 0.0.0.0 -p 11111 -s ./serverfiles -v 
+python3 ./src/upload.py -H 0.0.0.0 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v 
 ```
 
 ## Como expandir el proyecto sin romper test o instalador
@@ -52,10 +52,10 @@ Iniciar cliente en h1 y server en h2
 ```bash
 // sw
 <mininet> h1 python3 ./src/start-server.py -H 10.0.0.1 -p 11111 -s ./serverfiles -v  > logfile 2> errorlogfile  & 
-<mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/example_long.txt -n file_udp.txt -v > logupload 2> errorlogupload 
+<mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v > logupload 2> errorlogupload 
 // sr
 <mininet> h1 python3 ./src/start-server.py -H 10.0.0.1 -p 11111 -s ./serverfiles -v -r sr > logfile 2> errorlogfile   & 
-<mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/example_long.txt -n file_udp.txt -v -r sr > logupload 2> errorlogupload 
+<mininet> h2 python3 ./src/upload.py -H 10.0.0.1 -p 11111 -s /home/damaris/clientfiles/prueba5M.txt -n file_udp.txt -v -r sr > logupload 2> errorlogupload 
 
 ```
 Verificar inicialización
@@ -74,14 +74,11 @@ mininet> sh ifconfig s2-eth2 mtu 1000
 Generar trafico con **iperf** (con tamaño > MTU para generar **fragmentacion**)
 ```bash
 // Udp
-mininet> h1 iperf -s -u &
+mininet> h2 iperf -s -u &
 //Si el MTU es menor que 2000, el tráfico se fragmentará.
-mininet> h2 iperf -c h1 -u -b 10M -l 2000 -t 5 
+mininet> h1 iperf -c h2 -u -b 10M -l 2000 -t 5 
 
 // Tcp
-mininet> h1 iperf -s &                              
-mininet> h2 iperf -c h1 -b 10M -M 1400 -t 5 
+mininet> h2 iperf -s &                              
+mininet> h1 iperf -c h2 -b 10M -M 1400 -t 5 
 ```
-
-
-
