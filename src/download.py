@@ -5,9 +5,35 @@ import time
 from protocol.stop_and_wait import StopAndWaitReceiver
 from protocol.selective_repeat import SelectiveRepeatReceiver
 from protocol.server_listener import ServerManager
-from utils.custom_help_formatter import CustomHelpFormatter
-from utils.logger import VerbosityLevel, Logger 
+from utils import VerbosityLevel, Logger, CustomHelpFormatter, ConnectionConfig
 
+def behaviour(args):
+    connection, mode, filename = ServerManager.connect_to_server((args.host, args.port), "download", args.name)
+    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
+    
+    udp_socket = connection.socket
+    file_path = args.dst
+    
+    if args.protocol == "sw":
+        protocol = StopAndWaitReceiver(
+            sock=udp_socket,
+            output_path=args.dst,
+            timeout=ConnectionConfig.TIMEOUT
+        )
+    else:
+        protocol = SelectiveRepeatReceiver(
+            sock=udp_socket,
+            output_path=args.dst,
+            timeout=ConnectionConfig.TIMEOUT,
+            window_size=ConnectionConfig.SR_WINDOW_SIZE
+        )
+
+    # Start the download process
+    try:
+        protocol.start()
+    finally:
+        connection.close()    
+        Logger.info("Download completed and connection closed.")
 
 if __name__ == '__main__':
     # Custom help formatter to preserve manual spacing
@@ -22,10 +48,9 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--quiet'    , action='store_true', help="decrease output verbosity")
     parser.add_argument('-H', '--host'     , metavar='ADDR'     , type=str, default="127.0.0.1", help="Server IP address")
     parser.add_argument('-p', '--port'     , metavar='PORT'     , type=int, default=12345, help="Server port")
-    parser.add_argument('-s', '--src'      , metavar='DIRPATH'  , type=str, default="", help="Source file path")
+    parser.add_argument('-d', '--dst'      , metavar='DIRPATH'  , type=str, default="", help="Destination file path")
     parser.add_argument('-n', '--name'     , metavar='FILENAME' , type=str, default="", help="File name")
-    parser.add_argument('-r', '--protocol' , metavar='protocol' , help="error recovery protocol")
-    parser.add_argument('-a', '--algorithm', type=str, default="sw", choices=["sw", "sr"], help="sw or sr")
+    parser.add_argument('-r', '--protocol' , metavar='protocol' , choices=["sw","sr"], default="sw" ,help="error recovery protocol")
 
     # Parse the arguments
     args = parser.parse_args()
@@ -39,30 +64,6 @@ if __name__ == '__main__':
     else:
         Logger.setup_verbosity(VerbosityLevel.NORMAL)
 
-    connection, mode = ServerManager.connect_to_server((args.host, args.port), "download")
-    Logger.info(f"Handshake completado con servidor en {args.host}:{args.port}, com modo {mode}")
-    
-    udp_socket = connection.socket
-    file_path = os.path.join(args.src, args.name)
+    behaviour(args)
 
 
-
-    
-    if args.algorithm == "sw":
-        protocol = StopAndWaitReceiver(
-            sock=udp_socket,
-            output_path=args.src
-        )
-    else:
-        protocol = SelectiveRepeatReceiver(
-            sock=udp_socket,
-            output_path=args.src
-        )
-
-    # Start the download process
-    try:
-        protocol.start()
-    finally:
-        protocol.close()      
-        connection.close()    
-        Logger.info("Download completed and connection closed.")

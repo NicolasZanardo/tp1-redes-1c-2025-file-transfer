@@ -1,17 +1,19 @@
 import socket
 from utils.logger import Logger
+from .connection_closing import ConnectionClosingProtocol
 
 class ConnectionSocket:
     def __init__(self, destination_address, source_address=None):
-        if source_address is None:
-            source_address = ('localhost', 0)
-
         self.destination_address = destination_address
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
-        self.socket.bind(source_address)  # Bind to any available port
+        if source_address is not None:
+            self.socket.bind(source_address)
+
         self.source_address = self.socket.getsockname()
         Logger.debug(who=self.source_address, message=f"Socket created from {self.source_address} to {self.destination_address}")
+
+
 
     def send(self, data: bytes):
         self.socket.sendto(data, self.destination_address)
@@ -19,12 +21,14 @@ class ConnectionSocket:
         if data != b'ACK':
             Logger.debug(who=self.source_address, message=f"Sent: {data} to {self.destination_address}")
 
+
+
     def send_and_wait(self, data: bytes):
         self.socket.sendto(data, self.destination_address)
         
         if data != b'ACK':
             Logger.debug(who=self.source_address, message=f"Sent: {data} to {self.destination_address}")
-            
+
 
 
     def receive(self):
@@ -33,6 +37,10 @@ class ConnectionSocket:
         if addr != self.destination_address:
             Logger.debug(who=self.source_address, message=f"Received data from unexpected address: {addr}")
             return self.receive()
+
+        if data == b'FIN':
+            self.close()
+            raise ConnectionClosedError("Connection closed by remote side")
 
         elif data == b'ACK':
             Logger.debug(who=self.source_address, message=f"ACK received from {addr}")
@@ -46,9 +54,26 @@ class ConnectionSocket:
         return data, addr
 
     def close(self):
-        self.socket.close()
-        Logger.debug(who=self.source_address, message=f"Socket closed from {self.source_address} to {self.destination_address}")
-        self.socket = None
+        if self.socket is None:
+            Logger.debug(who=self.source_address, message="Socket already closed")
+            return
+        
+        try:
+            if ConnectionClosingProtocol.start_closing_handshake(self.socket, self.destination_address):
+                Logger.debug(who=self.source_address, message="Closing handshake completed")
+            else:
+                Logger.error(who=self.source_address, message="Closing handshake failed")
+        except Exception as e:
+            Logger.error(who=self.source_address, message=f"Error during closing handshake: {e}")
+        finally:
+            try:
+                self.socket.close()
+                Logger.debug(who=self.source_address, message=f"Socket closed from {self.source_address} to {self.destination_address}")
+            except Exception as e:
+                Logger.error(who=self.source_address, message=f"Error closing socket: {e}")
+            self.socket = None
+
+
 
     def get_message(self, timeout=2, max_retries=5):
         self.socket.settimeout(timeout)

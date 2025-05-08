@@ -61,7 +61,6 @@ class CompletedState(SWState):
         terminator = self.ctx.packetizer.make_terminate_packet()
         self.ctx.sock.sendto(terminator, self.ctx.dest)
         Logger.info(f"[SW] Transfer completed to {self.ctx.dest}")
-        self.ctx.close()
         self.ctx.completed = True
         return 
 
@@ -131,7 +130,7 @@ class StopAndWaitReceiver:
                     Logger.debug(
                         who=self.sock.getsockname(),
                         message=f"[SW-Receiver] Raw packet received from {addr}: {packet!r}"
-)
+                    )
                     if self.packetizer.is_data(packet):
                         seq = self.packetizer.extract_seq(packet)
                         Logger.debug(who=self.sock.getsockname(), message=f"[SW-Receiver] Received DATA seq={seq} from {addr}")

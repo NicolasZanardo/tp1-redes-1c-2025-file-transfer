@@ -6,7 +6,7 @@ from utils.logger import Logger
 
 class SelectiveRepeatProtocol:
     def __init__(self, sock: socket.socket, dest: tuple, file_path: str,
-                 packetizer: Packetizer = None, timeout: float = 10.0, window_size: int = 4):
+                 packetizer: Packetizer = None, timeout: float = 10.0, window_size: int = 1000):
         self.sock = sock
         self.dest = dest
         self.file_path = file_path
@@ -96,7 +96,7 @@ class SelectiveRepeatProtocol:
 
 class SelectiveRepeatReceiver:
     def __init__(self, sock: socket.socket, output_path: str,
-                 packetizer: Packetizer = None, timeout: float = 1.0, window_size: int = 4):
+                 packetizer: Packetizer = None, timeout: float = 1.0, window_size: int = 1000):
         self.sock = sock
         self.output_path = output_path
         self.packetizer = packetizer or DefaultPacketizer()
@@ -134,10 +134,10 @@ class SelectiveRepeatReceiver:
                         else:
 
                             last_ack = self.expected_seq - 1
-                            if last_ack >= 0:
-                                nak = self.packetizer.make_ack_packet(last_ack)
+                            if seq >= 0:
+                                nak = self.packetizer.make_ack_packet(seq)
                                 self.sock.sendto(nak, addr)
-                                Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] Resent ACK seq={last_ack}")
+                                Logger.debug(who=self.sock.getsockname(), message=f"[SR-Receiver] Resent ACK seq={seq}")
                     elif self.packetizer.is_terminate(packet):
                         Logger.info("[SR-Receiver] Received terminate.")
                         self.running = False
