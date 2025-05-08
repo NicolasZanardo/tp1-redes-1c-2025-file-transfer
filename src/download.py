@@ -14,6 +14,9 @@ def behaviour(args):
     udp_socket = connection.socket
     file_path = args.dst
     
+    if os.path.isfile(args.src):
+        raise SystemExit(f"El archivo {args.src} ya existe. Por favor seleccione otra ruta.")
+    
     if args.protocol == "sw":
         protocol = StopAndWaitReceiver(
             sock=udp_socket,

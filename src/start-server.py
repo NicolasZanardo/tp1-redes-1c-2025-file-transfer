@@ -41,7 +41,9 @@ def handle_client(conn, mode, file_path, protocol_choice):
                     window_size=ConnectionConfig.SR_WINDOW_SIZE
                 )
         else:
-            # TODO: Avoid overwriting existing file
+            if os.path.isfile(args.src):
+                Logger.error(f"No existe el archivo {file_path}")(f"El archivo {args.src} ya existe. Por favor seleccione otra ruta.")
+                return
             if protocol_choice == "sw":
                 protocol = StopAndWaitReceiver(
                     sock=raw_sock,
